@@ -42,9 +42,7 @@ interval_init(struct interval *top, int horizon, int refresh)
 }
 
 bool
-event_timeout_trigger(struct event_timeout *et,
-                      struct timeval *tv,
-                      const int et_const_retry)
+event_timeout_trigger(struct event_timeout *et, struct timeval *tv, const int et_const_retry)
 {
     bool ret = false;
     const time_t local_now = now;
@@ -55,14 +53,13 @@ event_timeout_trigger(struct event_timeout *et,
         if (wakeup <= 0)
         {
 #if INTERVAL_DEBUG
-            dmsg(D_INTERVAL, "EVENT event_timeout_trigger (%d) etcr=%d", et->n,
-                 et_const_retry);
+            dmsg(D_INTERVAL, "EVENT event_timeout_trigger (%d) etcr=%d", et->n, et_const_retry);
 #endif
             if (et_const_retry < 0)
             {
                 et->last = local_now;
                 wakeup = et->n;
-                ret = true;
+                ret = true;	//XXX: 此语句是否应该被放到该if语句之后？
             }
             else
             {
@@ -73,8 +70,7 @@ event_timeout_trigger(struct event_timeout *et,
         if (tv && wakeup < tv->tv_sec)
         {
 #if INTERVAL_DEBUG
-            dmsg(D_INTERVAL, "EVENT event_timeout_wakeup (%d/%d) etcr=%d",
-                 (int) wakeup, et->n, et_const_retry);
+            dmsg(D_INTERVAL, "EVENT event_timeout_wakeup (%d/%d) etcr=%d", (int) wakeup, et->n, et_const_retry);
 #endif
             tv->tv_sec = wakeup;
             tv->tv_usec = 0;

@@ -117,8 +117,7 @@ schedule_add_entry(struct schedule *s,
  * is randomized every time an entry is re-added).
  */
 static inline struct schedule_entry *
-schedule_get_earliest_wakeup(struct schedule *s,
-                             struct timeval *wakeup)
+schedule_get_earliest_wakeup(struct schedule *s, struct timeval *wakeup)
 {
     struct schedule_entry *ret;
 

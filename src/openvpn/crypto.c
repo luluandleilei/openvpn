@@ -740,8 +740,7 @@ crypto_max_overhead(void)
  * Build a struct key_type.
  */
 void
-init_key_type(struct key_type *kt, const char *ciphername,
-              const char *authname, int keysize, bool tls_mode, bool warn)
+init_key_type(struct key_type *kt, const char *ciphername, const char *authname, int keysize, bool tls_mode, bool warn)
 {
     bool aead_cipher = false;
 
@@ -920,10 +919,13 @@ key_is_zero(struct key *key, const struct key_type *kt)
 {
     int i;
     for (i = 0; i < kt->cipher_length; ++i)
+    {
         if (key->cipher[i])
         {
             return false;
         }
+	}
+
     msg(D_CRYPT_ERRORS, "CRYPTO INFO: WARNING: zero key detected");
     return true;
 }
@@ -1006,8 +1008,7 @@ check_replay_consistency(const struct key_type *kt, bool packet_id)
 {
     ASSERT(kt);
 
-    if (!packet_id && (cipher_kt_mode_ofb_cfb(kt->cipher)
-                       || cipher_kt_mode_aead(kt->cipher)))
+    if (!packet_id && (cipher_kt_mode_ofb_cfb(kt->cipher) || cipher_kt_mode_aead(kt->cipher)))
     {
         msg(M_FATAL, "--no-replay cannot be used with a CFB, OFB or AEAD mode cipher");
     }
@@ -1040,8 +1041,7 @@ generate_key_random(struct key *key, const struct key_type *kt)
                 hmac_len = kt->hmac_length;
             }
         }
-        if (!rand_bytes(key->cipher, cipher_len)
-            || !rand_bytes(key->hmac, hmac_len))
+        if (!rand_bytes(key->cipher, cipher_len) || !rand_bytes(key->hmac, hmac_len))
         {
             msg(M_FATAL, "ERROR: Random number generator cannot obtain entropy for key generation");
         }
@@ -1591,8 +1591,7 @@ verify_fix_key2(struct key2 *key2, const struct key_type *kt, const char *shared
 
 /* given a key and key_type, write key to buffer */
 bool
-write_key(const struct key *key, const struct key_type *kt,
-          struct buffer *buf)
+write_key(const struct key *key, const struct key_type *kt, struct buffer *buf)
 {
     ASSERT(kt->cipher_length <= MAX_CIPHER_KEY_LENGTH
            && kt->hmac_length <= MAX_HMAC_KEY_LENGTH);

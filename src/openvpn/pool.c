@@ -391,16 +391,11 @@ ifconfig_pool_list(const struct ifconfig_pool *pool, struct status_output *out)
                 if (pool->ipv6.enabled)
                 {
                     struct in6_addr ip6 = ifconfig_pool_handle_to_ipv6_base(pool, i);
-                    status_printf(out, "%s,%s,%s",
-                                  e->common_name,
-                                  print_in_addr_t(ip, 0, &gc),
-                                  print_in6_addr(ip6, 0, &gc));
+                    status_printf(out, "%s,%s,%s", e->common_name, print_in_addr_t(ip, 0, &gc), print_in6_addr(ip6, 0, &gc));
                 }
                 else
                 {
-                    status_printf(out, "%s,%s",
-                                  e->common_name,
-                                  print_in_addr_t(ip, 0, &gc));
+                    status_printf(out, "%s,%s", e->common_name, print_in_addr_t(ip, 0, &gc));
                 }
             }
         }

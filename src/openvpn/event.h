@@ -138,24 +138,9 @@ event_set_return_init(struct event_set_return *esr)
     esr->arg = NULL;
 }
 
-#ifdef _WIN32
-
-static inline void
-wait_signal(struct event_set *es, void *arg)
-{
-    if (HANDLE_DEFINED(win32_signal.in.read))
-    {
-        event_ctl(es, &win32_signal.in, EVENT_READ, arg);
-    }
-}
-
-#else  /* ifdef _WIN32 */
-
 static inline void
 wait_signal(struct event_set *es, void *arg)
 {
 }
-
-#endif
 
 #endif /* ifndef EVENT_H */

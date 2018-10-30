@@ -658,18 +658,12 @@ set_check_status(unsigned int info_level, unsigned int verbose_level)
  * from the OS.
  */
 void
-x_check_status(int status,
-               const char *description,
-               struct link_socket *sock,
-               struct tuntap *tt)
+x_check_status(int status, const char *description, struct link_socket *sock, struct tuntap *tt)
 {
     const int my_errno = openvpn_errno();
     const char *extended_msg = NULL;
 
-    msg(x_cs_verbose_level, "%s %s returned %d",
-        sock ? proto2ascii(sock->info.proto, sock->info.af, true) : "",
-        description,
-        status);
+    msg(x_cs_verbose_level, "%s %s returned %d", sock ? proto2ascii(sock->info.proto, sock->info.af, true) : "", description, status);
 
     if (status < 0)
     {

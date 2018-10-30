@@ -59,13 +59,10 @@
  */
 struct buffer
 {
-    int capacity;               /**< Size in bytes of memory allocated by
-                                 *   \c malloc(). */
-    int offset;                 /**< Offset in bytes of the actual content
-                                 *   within the allocated memory. */
-    int len;                    /**< Length in bytes of the actual content
-                                 *   within the allocated memory. */
-    uint8_t *data;              /**< Pointer to the allocated memory. */
+    int capacity; 		/* Size in bytes of memory allocated by malloc(). */
+    int offset;      	/* Offset in bytes of the actual content within the allocated memory. */
+    int len;          	/* Length in bytes of the actual content within the allocated memory. */
+    uint8_t *data;     	/* Pointer to the allocated memory. */
 
 #ifdef BUF_INIT_TRACKING
     const char *debug_file;
@@ -86,8 +83,7 @@ struct buffer
  */
 struct gc_entry
 {
-    struct gc_entry *next;      /**< Pointer to the next item in the
-                                 *   linked list. */
+    struct gc_entry *next;      /* Pointer to the next item in the linked list. */
 };
 
 /**

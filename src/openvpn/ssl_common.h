@@ -74,29 +74,16 @@
  *
  * @{
  */
-#define S_ERROR          -1     /**< Error state.  */
-#define S_UNDEF           0     /**< Undefined state, used after a \c
-                                 *   key_state is cleaned up. */
-#define S_INITIAL         1     /**< Initial \c key_state state after
-                                 *   initialization by \c key_state_init()
-                                 *   before start of three-way handshake. */
-#define S_PRE_START       2     /**< Waiting for the remote OpenVPN peer
-                                 *   to acknowledge during the initial
-                                 *   three-way handshake. */
-#define S_START           3     /**< Three-way handshake is complete,
-                                 *   start of key exchange. */
-#define S_SENT_KEY        4     /**< Local OpenVPN process has sent its
-                                 *   part of the key material. */
-#define S_GOT_KEY         5     /**< Local OpenVPN process has received
-                                 *   the remote's part of the key
-                                 *   material. */
-#define S_ACTIVE          6     /**< Operational \c key_state state
-                                 *   immediately after negotiation has
-                                 *   completed while still within the
-                                 *   handshake window. */
+#define S_ERROR          -1     /* Error state.  */
+#define S_UNDEF           0     /* Undefined state, used after a key_state is cleaned up. */
+#define S_INITIAL         1     /* Initial key_state state after initialization by key_state_init() before start of three-way handshake. */
+#define S_PRE_START       2     /* Waiting for the remote OpenVPN peer to acknowledge during the initial three-way handshake. */
+#define S_START           3     /* Three-way handshake is complete, start of key exchange. */
+#define S_SENT_KEY        4     /* Local OpenVPN process has sent its part of the key material. */
+#define S_GOT_KEY         5     /* Local OpenVPN process has received the remote's part of the key material. */
+#define S_ACTIVE          6     /* Operational key_state state immediately after negotiation has completed while still within the handshake window. */
 /* ready to exchange data channel packets */
-#define S_NORMAL_OP       7     /**< Normal operational \c key_state
-                                 *   state. */
+#define S_NORMAL_OP       7     /* Normal operational \c key_state state. */
 /** @} name Control channel negotiation states */
 /** @} addtogroup control_processor */
 
@@ -207,12 +194,12 @@ struct key_state
 struct tls_wrap_ctx
 {
     enum {
-        TLS_WRAP_NONE = 0, /**< No control channel wrapping */
-        TLS_WRAP_AUTH,  /**< Control channel authentication */
-        TLS_WRAP_CRYPT, /**< Control channel encryption and authentication */
-    } mode;                     /**< Control channel wrapping mode */
-    struct crypto_options opt;  /**< Crypto state */
-    struct buffer work;         /**< Work buffer (only for --tls-crypt) */
+        TLS_WRAP_NONE = 0, /* No control channel wrapping */
+        TLS_WRAP_AUTH,  /* Control channel authentication */
+        TLS_WRAP_CRYPT, /* Control channel encryption and authentication */
+    } mode;                     /* Control channel wrapping mode */
+    struct crypto_options opt;  /* Crypto state */
+    struct buffer work;         /* Work buffer (only for --tls-crypt) */
 };
 
 /*
@@ -250,12 +237,12 @@ struct tls_options
     int mode;
     bool pull;
     int push_peer_info_detail;
-    int transition_window;
-    int handshake_window;
+    int transition_window; //our old key can live this many seconds after a new a key renegotiation begins (default = 3600 seconds). This feature allows for a graceful transition from old to new key, and removes the key renegotiation sequence from the critical path of tunnel data forwarding.
+    int handshake_window; //the TLS-based key exchange must finalize within n seconds of handshake initiation by any peer (default = 60 seconds). If the handshake fails we will attempt to reset our connection with our peer and try again. Even in the event of handshake failure we will still use our expiring key for up to --tran-window seconds to maintain continuity of transmission of tunnel data.
     interval_t packet_timeout;
-    int renegotiate_bytes;
-    int renegotiate_packets;
-    interval_t renegotiate_seconds;
+    int renegotiate_bytes; //Renegotiate data channel key after n bytes sent or received (disabled by default with an exception)
+    int renegotiate_packets; //Renegotiate data channel key after n packets sent and received (disabled by default).
+    interval_t renegotiate_seconds;	//Renegotiate data channel key after n seconds (default=3600)
 
     /* cert verification parms */
     const char *verify_command;
@@ -349,19 +336,16 @@ struct tls_options
  *  @{ */
 /** @name Index of key_state objects within a tls_session structure
  *
- *  This is the index of \c tls_session.key
+ *  This is the index of tls_session.key
  *
  *  @{ */
-#define KS_PRIMARY    0         /**< Primary %key state index. */
-#define KS_LAME_DUCK  1         /**< %Key state index that will retire
-                                 *   soon. */
-#define KS_SIZE       2         /**< Size of the \c tls_session.key array. */
+#define KS_PRIMARY    0         /* Primary key state index. */
+#define KS_LAME_DUCK  1         /* Key state index that will retire soon. */
+#define KS_SIZE       2         /* Size of the tls_session.key array. */
 /** @} name Index of key_state objects within a tls_session structure */
 /** @} addtogroup control_processor */
 
-#define AUTH_TOKEN_SIZE 32      /**< Size of server side generated auth tokens.
-                                 *   32 bytes == 256 bits
-                                 */
+#define AUTH_TOKEN_SIZE 32      /*Size of server side generated auth tokens. 32 bytes == 256 bits */
 
 /**
  * Security parameter state of a single session within a VPN tunnel.
@@ -437,12 +421,10 @@ struct tls_session
  *  is being negotiated.
  *
  *  @{ */
-#define TM_ACTIVE    0          /**< Active \c tls_session. */
-#define TM_UNTRUSTED 1          /**< As yet un-trusted \c tls_session
-                                 *   being negotiated. */
-#define TM_LAME_DUCK 2          /**< Old \c tls_session. */
-#define TM_SIZE      3          /**< Size of the \c tls_multi.session
-                                 *   array. */
+#define TM_ACTIVE    0          /* Active tls_session. */
+#define TM_UNTRUSTED 1          /* As yet un-trusted tls_session being negotiated. */
+#define TM_LAME_DUCK 2          /* Old tls_session. */
+#define TM_SIZE      3          /* Size of the tls_multi.session array. */
 /** @} name Index of tls_session objects within a tls_multi structure */
 /** @} addtogroup control_processor */
 

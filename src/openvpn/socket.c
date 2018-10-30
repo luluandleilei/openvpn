@@ -1087,14 +1087,11 @@ bind_local(struct link_socket *sock, const sa_family_t ai_family)
     {
         if (sock->socks_proxy && sock->info.proto == PROTO_UDP)
         {
-            socket_bind(sock->ctrl_sd, sock->info.lsa->bind_local,
-                        ai_family, "SOCKS", false);
+            socket_bind(sock->ctrl_sd, sock->info.lsa->bind_local, ai_family, "SOCKS", false);
         }
         else
         {
-            socket_bind(sock->sd, sock->info.lsa->bind_local,
-                        ai_family,
-                        "TCP/UDP", sock->info.bind_ipv6_only);
+            socket_bind(sock->sd, sock->info.lsa->bind_local, ai_family, "TCP/UDP", sock->info.bind_ipv6_only);
         }
     }
 }
@@ -1368,11 +1365,7 @@ socket_listen_accept(socket_descriptor_t sd,
 #endif
 #endif
 void
-socket_bind(socket_descriptor_t sd,
-            struct addrinfo *local,
-            int ai_family,
-            const char *prefix,
-            bool ipv6only)
+socket_bind(socket_descriptor_t sd, struct addrinfo *local, int ai_family, const char *prefix, bool ipv6only)
 {
     struct gc_arena gc = gc_new();
 
@@ -1415,8 +1408,7 @@ socket_bind(socket_descriptor_t sd,
     if (bind(sd, cur->ai_addr, cur->ai_addrlen))
     {
         msg(M_FATAL | M_ERRNO, "%s: Socket bind failed on local address %s",
-            prefix,
-            print_sockaddr_ex(local->ai_addr, ":", PS_SHOW_PORT, &gc));
+            prefix, print_sockaddr_ex(local->ai_addr, ":", PS_SHOW_PORT, &gc));
     }
     gc_free(&gc);
 }
@@ -1987,8 +1979,7 @@ link_socket_init_phase1(struct link_socket *sock,
     }
 }
 
-static
-void
+static void
 phase2_inetd(struct link_socket *sock, const struct frame *frame,
              const char *remote_dynamic, volatile int *signal_received)
 {
@@ -2021,8 +2012,7 @@ phase2_inetd(struct link_socket *sock, const struct frame *frame,
             "function, using AF_INET",
             proto2ascii(sock->info.proto, false));
 #endif /* ifdef HAVE_GETSOCKNAME */
-        sock->sd =
-            socket_listen_accept(sock->sd,
+        sock->sd = socket_listen_accept(sock->sd,
                                  &sock->info.lsa->actual,
                                  remote_dynamic,
                                  sock->info.lsa->bind_local,
@@ -2895,10 +2885,7 @@ print_link_socket_actual(const struct link_socket_actual *act, struct gc_arena *
 #endif
 
 const char *
-print_link_socket_actual_ex(const struct link_socket_actual *act,
-                            const char *separator,
-                            const unsigned int flags,
-                            struct gc_arena *gc)
+print_link_socket_actual_ex(const struct link_socket_actual *act, const char *separator, const unsigned int flags, struct gc_arena *gc)
 {
     if (act)
     {
@@ -2924,9 +2911,7 @@ print_link_socket_actual_ex(const struct link_socket_actual *act,
 #else  /* if defined(HAVE_IN_PKTINFO) && defined(HAVE_IPI_SPEC_DST) */
 #error ENABLE_IP_PKTINFO is set without IP_PKTINFO xor IP_RECVDSTADDR (fix syshead.h)
 #endif
-                    buf_printf(&out, " (via %s%%%s)",
-                               print_sockaddr_ex(&sa.addr.sa, separator, 0, gc),
-                               ifname);
+                    buf_printf(&out, " (via %s%%%s)", print_sockaddr_ex(&sa.addr.sa, separator, 0, gc), ifname);
                 }
                 break;
 
@@ -2938,8 +2923,7 @@ print_link_socket_actual_ex(const struct link_socket_actual *act,
                     sin6.sin6_family = AF_INET6;
                     sin6.sin6_addr = act->pi.in6.ipi6_addr;
                     if_indextoname(act->pi.in6.ipi6_ifindex, ifname);
-                    if (getnameinfo((struct sockaddr *)&sin6, sizeof(struct sockaddr_in6),
-                                    buf, sizeof(buf), NULL, 0, NI_NUMERICHOST) == 0)
+                    if (getnameinfo((struct sockaddr *)&sin6, sizeof(struct sockaddr_in6), buf, sizeof(buf), NULL, 0, NI_NUMERICHOST) == 0)
                     {
                         buf_printf(&out, " (via %s%%%s)", buf, ifname);
                     }
@@ -3372,9 +3356,7 @@ link_socket_read_tcp(struct link_socket *sock,
 #endif
 
 static socklen_t
-link_socket_read_udp_posix_recvmsg(struct link_socket *sock,
-                                   struct buffer *buf,
-                                   struct link_socket_actual *from)
+link_socket_read_udp_posix_recvmsg(struct link_socket *sock, struct buffer *buf, struct link_socket_actual *from)
 {
     struct iovec iov;
     uint8_t pktinfo_buf[PKTINFO_BUF_SIZE];
@@ -3395,8 +3377,7 @@ link_socket_read_udp_posix_recvmsg(struct link_socket *sock,
         struct cmsghdr *cmsg;
         fromlen = mesg.msg_namelen;
         cmsg = CMSG_FIRSTHDR(&mesg);
-        if (cmsg != NULL
-            && CMSG_NXTHDR(&mesg, cmsg) == NULL
+        if (cmsg != NULL && CMSG_NXTHDR(&mesg, cmsg) == NULL
 #if defined(HAVE_IN_PKTINFO) && defined(HAVE_IPI_SPEC_DST)
             && cmsg->cmsg_level == SOL_IP
             && cmsg->cmsg_type == IP_PKTINFO
@@ -3440,9 +3421,7 @@ link_socket_read_udp_posix_recvmsg(struct link_socket *sock,
 #endif /* if ENABLE_IP_PKTINFO */
 
 int
-link_socket_read_udp_posix(struct link_socket *sock,
-                           struct buffer *buf,
-                           struct link_socket_actual *from)
+link_socket_read_udp_posix(struct link_socket *sock, struct buffer *buf, struct link_socket_actual *from)
 {
     socklen_t fromlen = sizeof(from->dest.addr);
     socklen_t expectedlen = af_addr_size(sock->info.af);
@@ -3455,8 +3434,7 @@ link_socket_read_udp_posix(struct link_socket *sock,
     }
     else
 #endif
-    buf->len = recvfrom(sock->sd, BPTR(buf), buf_forward_capacity(buf), 0,
-                        &from->dest.addr.sa, &fromlen);
+    buf->len = recvfrom(sock->sd, BPTR(buf), buf_forward_capacity(buf), 0, &from->dest.addr.sa, &fromlen);
     /* FIXME: won't do anything when sock->info.af == AF_UNSPEC */
     if (buf->len >= 0 && expectedlen && fromlen != expectedlen)
     {
@@ -3924,11 +3902,7 @@ socket_finalize(SOCKET s,
  */
 
 unsigned int
-socket_set(struct link_socket *s,
-           struct event_set *es,
-           unsigned int rwflags,
-           void *arg,
-           unsigned int *persistent)
+socket_set(struct link_socket *s, struct event_set *es, unsigned int rwflags, void *arg, unsigned int *persistent)
 {
     if (s)
     {
@@ -3937,13 +3911,6 @@ socket_set(struct link_socket *s,
             ASSERT(!persistent);
             rwflags &= ~EVENT_READ;
         }
-
-#ifdef _WIN32
-        if (rwflags & EVENT_READ)
-        {
-            socket_recv_queue(s, 0);
-        }
-#endif
 
         /* if persistent is defined, call event_ctl only if rwflags has changed since last call */
         if (!persistent || *persistent != rwflags)

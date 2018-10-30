@@ -43,14 +43,10 @@
 
 #define EXPONENTIAL_BACKOFF
 
-#define RELIABLE_ACK_SIZE 8     /**< The maximum number of packet IDs
-                                 *   waiting to be acknowledged which can
-                                 *   be stored in one \c reliable_ack
-                                 *   structure. */
-
-#define RELIABLE_CAPACITY 8     /**< The maximum number of packets that
-                                 *   the reliability layer for one VPN
-                                 *   tunnel in one direction can store. */
+/* The maximum number of packet IDs waiting to be acknowledged which can be stored in one reliable_ack structure. */
+#define RELIABLE_ACK_SIZE 8     
+/* The maximum number of packets that the reliability layer for one VPN tunnel in one direction can store. */
+#define RELIABLE_CAPACITY 8     
 
 /**
  * The acknowledgment structure in which packet IDs are stored for later
@@ -69,8 +65,8 @@ struct reliable_ack
 struct reliable_entry
 {
     bool active;
-    interval_t timeout;
-    time_t next_try;
+    interval_t timeout;	//sending timeout (after this time we send again until ACK) 
+    time_t next_try;	//next time to try to send the packet (next_try = now + timeout;)
     packet_id_type packet_id;
     int opcode;
     struct buffer buf;
@@ -82,10 +78,10 @@ struct reliable_entry
  */
 struct reliable
 {
-    int size;
-    interval_t initial_timeout;
-    packet_id_type packet_id;
-    int offset;
+    int size; //The number of packets that this reliable structure can store simultaneously.
+    interval_t initial_timeout;	//sending timeout (after this time we send again until ACK) 
+    packet_id_type packet_id;	//next sending packet id
+    int offset;	//The size of reserved space at the beginning of the buffers to allow efficient header prepending.
     bool hold; /* don't xmit until reliable_schedule_now is called */
     struct reliable_entry array[RELIABLE_CAPACITY];
 };
@@ -151,24 +147,17 @@ reliable_ack_empty(struct reliable_ack *ack)
 /**
  * Write a packet ID acknowledgment record to a buffer.
  *
- * @param ack The acknowledgment structure containing packet IDs to be
- *     acknowledged.
- * @param buf The buffer into which the acknowledgment record will be
- *     written.
- * @param sid The session ID of the VPN tunnel associated with the
- *     packet IDs to be acknowledged.
- * @param max The maximum number of acknowledgments to be written in
- *     the record.
- * @param prepend If true, prepend the acknowledgment record in the
- *     buffer; if false, write into the buffer's current position.
+ * @param ack The acknowledgment structure containing packet IDs to be acknowledged.
+ * @param buf The buffer into which the acknowledgment record will be written.
+ * @param sid The session ID of the VPN tunnel associated with the packet IDs to be acknowledged.
+ * @param max The maximum number of acknowledgments to be written in the record.
+ * @param prepend If true, prepend the acknowledgment record in the buffer; if false, write into the buffer's current position.
  *
  * @return
  * @li True, if processing was successful.
  * @li False, if an error occurs during processing.
  */
-bool reliable_ack_write(struct reliable_ack *ack,
-                        struct buffer *buf,
-                        const struct session_id *sid, int max, bool prepend);
+bool reliable_ack_write(struct reliable_ack *ack, struct buffer *buf, const struct session_id *sid, int max, bool prepend);
 
 /** @} name Functions for processing outgoing acknowledgments */
 
@@ -181,12 +170,9 @@ bool reliable_ack_write(struct reliable_ack *ack,
  * Initialize a reliable structure.
  *
  * @param rel The reliable structure to initialize.
- * @param buf_size The size of the buffers in which packets will be
- *     stored.
- * @param offset The size of reserved space at the beginning of the
- *     buffers to allow efficient header prepending.
- * @param array_size The number of packets that this reliable
- *     structure can store simultaneously.
+ * @param buf_size The size of the buffers in which packets will be stored.
+ * @param offset The size of reserved space at the beginning of the buffers to allow efficient header prepending.
+ * @param array_size The number of packets that this reliable structure can store simultaneously.
  * @param hold description
  */
 void reliable_init(struct reliable *rel, int buf_size, int offset, int array_size, bool hold);
@@ -380,16 +366,13 @@ void reliable_mark_active_outgoing(struct reliable *rel, struct buffer *buf, int
  *  @{ */
 
 /**
- * Check whether a reliable structure has any active entries
- *     ready to be (re)sent.
+ * Check whether a reliable structure has any active entries ready to be (re)sent.
  *
  * @param rel The reliable structure to check.
  *
  * @return
- * @li True, if there are active entries ready to be (re)sent
- *     president.
- * @li False, if there are no active entries, or the active entries
- *     are not yet ready for resending.
+ * @li True, if there are active entries ready to be (re)sent president.
+ * @li False, if there are no active entries, or the active entries are not yet ready for resending.
  */
 bool reliable_can_send(const struct reliable *rel);
 

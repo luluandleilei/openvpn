@@ -142,9 +142,7 @@ multi_get_create_instance_udp(struct multi_context *m, bool *floated)
         {
             const char *status = mi ? "[ok]" : "[failed]";
 
-            dmsg(D_MULTI_DEBUG, "GET INST BY REAL: %s %s",
-                 mroute_addr_print(&real, &gc),
-                 status);
+            dmsg(D_MULTI_DEBUG, "GET INST BY REAL: %s %s", mroute_addr_print(&real, &gc), status);
         }
 #endif
     }

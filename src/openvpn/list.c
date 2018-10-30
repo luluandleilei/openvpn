@@ -191,6 +191,7 @@ hash_remove_by_value(struct hash *hash, void *value)
     hash_iterator_free(&hi);
 }
 
+//删除bucket中element的key为NULL的节点
 static void
 hash_remove_marked(struct hash *hash, struct hash_bucket *bucket)
 {
@@ -223,10 +224,7 @@ hash_remove_marked(struct hash *hash, struct hash_bucket *bucket)
 }
 
 void
-hash_iterator_init_range(struct hash *hash,
-                         struct hash_iterator *hi,
-                         int start_bucket,
-                         int end_bucket)
+hash_iterator_init_range(struct hash *hash, struct hash_iterator *hi, int start_bucket, int end_bucket)
 {
     if (end_bucket > hash->n_buckets)
     {
@@ -246,8 +244,7 @@ hash_iterator_init_range(struct hash *hash,
 }
 
 void
-hash_iterator_init(struct hash *hash,
-                   struct hash_iterator *hi)
+hash_iterator_init(struct hash *hash, struct hash_iterator *hi)
 {
     hash_iterator_init_range(hash, hi, 0, hash->n_buckets);
 }

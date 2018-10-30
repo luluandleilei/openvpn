@@ -320,9 +320,7 @@ check_tls_dowork(struct context *c)
 
     if (interval_test(&c->c2.tmp_int))
     {
-        const int tmp_status = tls_multi_process
-                                   (c->c2.tls_multi, &c->c2.to_link, &c->c2.to_link_addr,
-                                   get_link_socket_info(c), &wakeup);
+        const int tmp_status = tls_multi_process (c->c2.tls_multi, &c->c2.to_link, &c->c2.to_link_addr, get_link_socket_info(c), &wakeup);
         if (tmp_status == TLSMP_ACTIVE)
         {
             update_time();
@@ -440,13 +438,7 @@ check_connection_established_dowork(struct context *c)
 #ifdef ENABLE_MANAGEMENT
                 if (management)
                 {
-                    management_set_state(management,
-                                         OPENVPN_STATE_GET_CONFIG,
-                                         NULL,
-                                         NULL,
-                                         NULL,
-                                         NULL,
-                                         NULL);
+                    management_set_state(management, OPENVPN_STATE_GET_CONFIG, NULL, NULL, NULL, NULL, NULL);
                 }
 #endif
                 /* fire up push request right away (already 1s delayed) */
@@ -945,9 +937,7 @@ read_incoming_link(struct context *c)
     c->c2.buf = c->c2.buffers->read_link_buf;
     ASSERT(buf_init(&c->c2.buf, FRAME_HEADROOM_ADJ(&c->c2.frame, FRAME_HEADROOM_MARKER_READ_LINK)));
 
-    status = link_socket_read(c->c2.link_socket,
-                              &c->c2.buf,
-                              &c->c2.from);
+    status = link_socket_read(c->c2.link_socket, &c->c2.buf, &c->c2.from);
 
     if (socket_connection_reset(c->c2.link_socket, status))
     {
@@ -1083,8 +1073,7 @@ process_incoming_link_part1(struct context *c, struct link_socket_info *lsi, boo
              * and return false.
              */
             uint8_t opcode = *BPTR(&c->c2.buf) >> P_OPCODE_SHIFT;
-            if (tls_pre_decrypt(c->c2.tls_multi, &c->c2.from, &c->c2.buf, &co,
-                                floated, &ad_start))
+            if (tls_pre_decrypt(c->c2.tls_multi, &c->c2.from, &c->c2.buf, &co, floated, &ad_start))
             {
                 /* Restore pre-NCP frame parameters */
                 if (is_hard_reset(opcode, c->options.key_method))
@@ -1117,8 +1106,7 @@ process_incoming_link_part1(struct context *c, struct link_socket_info *lsi, boo
 #endif
 
         /* authenticate and decrypt the incoming packet */
-        decrypt_status = openvpn_decrypt(&c->c2.buf, c->c2.buffers->decrypt_buf,
-                                         co, &c->c2.frame, ad_start);
+        decrypt_status = openvpn_decrypt(&c->c2.buf, c->c2.buffers->decrypt_buf, co, &c->c2.frame, ad_start);
 
         if (!decrypt_status && link_socket_connection_oriented(c->c2.link_socket))
         {
@@ -1586,9 +1574,7 @@ process_outgoing_link(struct context *c)
                 socks_preprocess_outgoing_link(c, &to_addr, &size_delta);
 
                 /* Send packet */
-                size = link_socket_write(c->c2.link_socket,
-                                         &c->c2.to_link,
-                                         to_addr);
+                size = link_socket_write(c->c2.link_socket, &c->c2.to_link, to_addr);
 
                 /* Undo effect of prepend */
                 link_socket_write_post_size_adjust(&size, size_delta, &c->c2.to_link);
@@ -1772,17 +1758,6 @@ pre_select(struct context *c)
      */
     c->c2.timeval.tv_sec = BIG_TIMEOUT;
     c->c2.timeval.tv_usec = 0;
-
-#if defined(_WIN32)
-    if (check_debug_level(D_TAP_WIN_DEBUG))
-    {
-        c->c2.timeval.tv_sec = 1;
-        if (tuntap_defined(c->c1.tuntap))
-        {
-            tun_show_debug(c->c1.tuntap);
-        }
-    }
-#endif
 
     /* check coarse timers? */
     check_coarse_timers(c);

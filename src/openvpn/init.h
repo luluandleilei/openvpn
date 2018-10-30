@@ -84,9 +84,7 @@ bool do_test_crypto(const struct options *o);
 
 void context_gc_free(struct context *c);
 
-bool do_up(struct context *c,
-           bool pulled_options,
-           unsigned int option_types_found);
+bool do_up(struct context *c, bool pulled_options, unsigned int option_types_found);
 
 unsigned int pull_permission_mask(const struct context *c);
 

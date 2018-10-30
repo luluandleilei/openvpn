@@ -1698,8 +1698,7 @@ bio_write(BIO *bio, const uint8_t *data, int size, const char *desc)
         }
         else if (i != size)
         {
-            crypto_msg(D_TLS_ERRORS, "TLS ERROR: BIO write %s incomplete %d/%d",
-                       desc, i, size);
+            crypto_msg(D_TLS_ERRORS, "TLS ERROR: BIO write %s incomplete %d/%d", desc, i, size);
             ret = -1;
             ERR_clear_error();
         }
@@ -1713,8 +1712,7 @@ bio_write(BIO *bio, const uint8_t *data, int size, const char *desc)
 }
 
 /*
- * Inline functions for reading from and writing
- * to BIOs.
+ * Inline functions for reading from and writing to BIOs.
  */
 
 static void

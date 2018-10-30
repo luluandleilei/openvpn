@@ -104,8 +104,7 @@ struct link_socket_addr
 {
     struct addrinfo *bind_local;
     struct addrinfo *remote_list; /* complete remote list */
-    struct addrinfo *current_remote; /* remote used in the
-                                      * current connection attempt */
+    struct addrinfo *current_remote; /* remote used in the current connection attempt */
     struct link_socket_actual actual; /* reply to this address */
 };
 
@@ -167,13 +166,6 @@ struct link_socket
 
     socket_descriptor_t sd;
     socket_descriptor_t ctrl_sd; /* only used for UDP over Socks */
-
-#ifdef _WIN32
-    struct overlapped_io reads;
-    struct overlapped_io writes;
-    struct rw_handle rw_handle;
-    struct rw_handle listen_handle; /* For listening on TCP socket in server mode */
-#endif
 
     /* used for printing status info only */
     unsigned int rwflags_debug;
@@ -280,11 +272,7 @@ int socket_finalize(
 
 struct link_socket *link_socket_new(void);
 
-void socket_bind(socket_descriptor_t sd,
-                 struct addrinfo *local,
-                 int af_family,
-                 const char *prefix,
-                 bool ipv6only);
+void socket_bind(socket_descriptor_t sd, struct addrinfo *local, int af_family, const char *prefix, bool ipv6only);
 
 int openvpn_connect(socket_descriptor_t sd,
                     const struct sockaddr *remote,
@@ -931,9 +919,7 @@ socket_connection_reset(const struct link_socket *sock, int status)
 }
 
 static inline bool
-link_socket_verify_incoming_addr(struct buffer *buf,
-                                 const struct link_socket_info *info,
-                                 const struct link_socket_actual *from_addr)
+link_socket_verify_incoming_addr(struct buffer *buf, const struct link_socket_info *info, const struct link_socket_actual *from_addr)
 {
     if (buf->len > 0)
     {
@@ -1048,19 +1034,13 @@ int link_socket_read_udp_posix(struct link_socket *sock,
 
 /* read a TCP or UDP packet from link */
 static inline int
-link_socket_read(struct link_socket *sock,
-                 struct buffer *buf,
-                 struct link_socket_actual *from)
+link_socket_read(struct link_socket *sock, struct buffer *buf, struct link_socket_actual *from)
 {
     if (proto_is_udp(sock->info.proto)) /* unified UDPv4 and UDPv6 */
     {
         int res;
 
-#ifdef _WIN32
-        res = link_socket_read_udp_win32(sock, buf, from);
-#else
         res = link_socket_read_udp_posix(sock, buf, from);
-#endif
         return res;
     }
     else if (proto_is_tcp(sock->info.proto)) /* unified TCPv4 and TCPv6 */
@@ -1225,11 +1205,7 @@ socket_read_residual(const struct link_socket *s)
 static inline event_t
 socket_event_handle(const struct link_socket *s)
 {
-#ifdef _WIN32
-    return &s->rw_handle;
-#else
     return s->sd;
-#endif
 }
 
 event_t socket_listen_event_handle(struct link_socket *s);

@@ -140,19 +140,12 @@ struct multi_context {
     struct multi_instance **instances;  /**< Array of multi_instances. An instance can be
                                          * accessed using peer-id as an index. */
 
-    struct hash *hash;          /**< VPN tunnel instances indexed by real
-                                 *   address of the remote peer. */
-    struct hash *vhash;         /**< VPN tunnel instances indexed by
-                                 *   virtual address of remote hosts. */
-    struct hash *iter;          /**< VPN tunnel instances indexed by real
-                                 *   address of the remote peer, optimized
-                                 *   for iteration. */
+    struct hash *hash;    		/* VPN tunnel instances indexed by real address of the remote peer. */
+    struct hash *vhash;         /* VPN tunnel instances indexed by virtual address of remote hosts. */
+    struct hash *iter;          /* VPN tunnel instances indexed by real address of the remote peer, optimized for iteration. */
     struct schedule *schedule;
-    struct mbuf_set *mbuf;      /**< Set of buffers for passing data
-                                 *   channel packets between VPN tunnel
-                                 *   instances. */
-    struct multi_tcp *mtcp;     /**< State specific to OpenVPN using TCP
-                                 *   as external transport. */
+    struct mbuf_set *mbuf;      /* Set of buffers for passing data channel packets between VPN tunnel instances. */
+    struct multi_tcp *mtcp;     /* State specific to OpenVPN using TCP as external transport. */
     struct ifconfig_pool *ifconfig_pool;
     struct frequency_limit *new_connection_limiter;
     struct mroute_helper *route_helper;
@@ -175,8 +168,7 @@ struct multi_context {
     struct context_buffers *context_buffers;
     time_t per_second_trigger;
 
-    struct context top;         /**< Storage structure for process-wide
-                                 *   configuration. */
+    struct context top;         /* Storage structure for process-wide configuration. */
 
     /*
      * Timer object for stale route check
@@ -462,20 +454,17 @@ multi_route_del(struct multi_route *route)
 }
 
 static inline bool
-multi_route_defined(const struct multi_context *m,
-                    const struct multi_route *r)
+multi_route_defined(const struct multi_context *m, const struct multi_route *r)
 {
     if (r->instance->halt)
     {
         return false;
     }
-    else if ((r->flags & MULTI_ROUTE_CACHE)
-             && r->cache_generation != m->route_helper->cache_generation)
+    else if ((r->flags & MULTI_ROUTE_CACHE) && r->cache_generation != m->route_helper->cache_generation)
     {
         return false;
     }
-    else if ((r->flags & MULTI_ROUTE_AGEABLE)
-             && r->last_reference + m->route_helper->ageable_ttl_secs < now)
+    else if ((r->flags & MULTI_ROUTE_AGEABLE) && r->last_reference + m->route_helper->ageable_ttl_secs < now)
     {
         return false;
     }

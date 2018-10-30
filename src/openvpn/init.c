@@ -439,13 +439,10 @@ next_connection_entry(struct context *c)
         }
         else
         {
-            /* Check if there is another resolved address to try for
-             * the current connection */
-            if (c->c1.link_socket_addr.current_remote
-                && c->c1.link_socket_addr.current_remote->ai_next)
+            /* Check if there is another resolved address to try for the current connection */
+            if (c->c1.link_socket_addr.current_remote && c->c1.link_socket_addr.current_remote->ai_next)
             {
-                c->c1.link_socket_addr.current_remote =
-                    c->c1.link_socket_addr.current_remote->ai_next;
+                c->c1.link_socket_addr.current_remote = c->c1.link_socket_addr.current_remote->ai_next;
             }
             else
             {
@@ -461,8 +458,7 @@ next_connection_entry(struct context *c)
                 }
                 else
                 {
-                    c->c1.link_socket_addr.current_remote =
-                        c->c1.link_socket_addr.remote_list;
+                    c->c1.link_socket_addr.current_remote = c->c1.link_socket_addr.remote_list;
                 }
 
                 /*
@@ -747,10 +743,6 @@ init_static(void)
     error_reset();              /* initialize error.c */
     reset_check_status();       /* initialize status check code in socket.c */
 
-#ifdef _WIN32
-    init_win32();
-#endif
-
 #ifdef OPENVPN_DEBUG_COMMAND_LINE
     {
         int i;
@@ -819,9 +811,7 @@ init_static(void)
 #ifdef GEN_PATH_TEST
     {
         struct gc_arena gc = gc_new();
-        const char *fn = gen_path("foo",
-                                  "bar",
-                                  &gc);
+        const char *fn = gen_path("foo", "bar", &gc);
         printf("%s\n", fn);
         gc_free(&gc);
     }
@@ -1513,16 +1503,10 @@ initialization_sequence_completed(struct context *c, const unsigned int flags)
     /* Test if errors */
     if (flags & ISC_ERRORS)
     {
-#ifdef _WIN32
-        show_routes(M_INFO|M_NOPREFIX);
-        show_adapters(M_INFO|M_NOPREFIX);
-        msg(M_INFO, "%s With Errors ( see http://openvpn.net/faq.html#dhcpclientserv )", message);
-#else
 #ifdef ENABLE_SYSTEMD
         sd_notifyf(0, "STATUS=Failed to start up: %s With Errors\nERRNO=1", message);
 #endif /* HAVE_SYSTEMD_SD_DAEMON_H */
         msg(M_INFO, "%s With Errors", message);
-#endif
     }
     else
     {
@@ -1692,181 +1676,119 @@ do_open_tun(struct context *c)
     struct gc_arena gc = gc_new();
     bool ret = false;
 
-#ifndef TARGET_ANDROID
     if (!c->c1.tuntap)
     {
-#endif
 
-#ifdef TARGET_ANDROID
-    /* If we emulate persist-tun on android we still have to open a new tun and
-     * then close the old */
-    int oldtunfd = -1;
-    if (c->c1.tuntap)
-    {
-        oldtunfd = c->c1.tuntap->fd;
-        free(c->c1.tuntap);
-        c->c1.tuntap = NULL;
-        c->c1.tuntap_owned = false;
-    }
-#endif
+	    /* initialize (but do not open) tun/tap object */
+	    do_init_tun(c);
 
-    /* initialize (but do not open) tun/tap object */
-    do_init_tun(c);
+	    /* allocate route list structure */
+	    do_alloc_route_list(c);
 
+	    /* parse and resolve the route option list */
+	    ASSERT(c->c2.link_socket);
+	    if (c->options.routes && c->c1.route_list)
+	    {
+	        do_init_route_list(&c->options, c->c1.route_list, &c->c2.link_socket->info, c->c2.es);
+	    }
+	    if (c->options.routes_ipv6 && c->c1.route_ipv6_list)
+	    {
+	        do_init_route_ipv6_list(&c->options, c->c1.route_ipv6_list, &c->c2.link_socket->info, c->c2.es);
+	    }
+
+	    /* do ifconfig */
+	    if (!c->options.ifconfig_noexec && ifconfig_order() == IFCONFIG_BEFORE_TUN_OPEN)
+	    {
+	        /* guess actual tun/tap unit number that will be returned
+	         * by open_tun */
+	        const char *guess = guess_tuntap_dev(c->options.dev, c->options.dev_type, c->options.dev_node, &gc);
+	        do_ifconfig(c->c1.tuntap, guess, TUN_MTU_SIZE(&c->c2.frame), c->c2.es);
+	    }
+
+	    /* possibly add routes */
+	    if (route_order() == ROUTE_BEFORE_TUN)
+	    {
+	        /* Ignore route_delay, would cause ROUTE_BEFORE_TUN to be ignored */
+	        do_route(&c->options, c->c1.route_list, c->c1.route_ipv6_list, c->c1.tuntap, c->plugins, c->c2.es);
+	    }
+
+	    /* open the tun device */
+	    open_tun(c->options.dev, c->options.dev_type, c->options.dev_node, c->c1.tuntap);
+
+	    /* set the hardware address */
+	    if (c->options.lladdr)
+	    {
+	        set_lladdr(c->c1.tuntap->actual_name, c->options.lladdr, c->c2.es);
+	    }
+
+	    /* do ifconfig */
+	    if (!c->options.ifconfig_noexec && ifconfig_order() == IFCONFIG_AFTER_TUN_OPEN)
+	    {
+	        do_ifconfig(c->c1.tuntap, c->c1.tuntap->actual_name, TUN_MTU_SIZE(&c->c2.frame), c->c2.es);
+	    }
+
+	    /* run the up script */
+	    run_up_down(c->options.up_script,
+	                c->plugins,
+	                OPENVPN_PLUGIN_UP,
+	                c->c1.tuntap->actual_name,
 #ifdef _WIN32
-    /* store (hide) interactive service handle in tuntap_options */
-    c->c1.tuntap->options.msg_channel = c->options.msg_channel;
-    msg(D_ROUTE, "interactive service msg_channel=%u", (unsigned int) c->options.msg_channel);
+	                c->c1.tuntap->adapter_index,
 #endif
+	                dev_type_string(c->options.dev, c->options.dev_type),
+	                TUN_MTU_SIZE(&c->c2.frame),
+	                EXPANDED_SIZE(&c->c2.frame),
+	                print_in_addr_t(c->c1.tuntap->local, IA_EMPTY_IF_UNDEF, &gc),
+	                print_in_addr_t(c->c1.tuntap->remote_netmask, IA_EMPTY_IF_UNDEF, &gc),
+	                "init",
+	                NULL,
+	                "up",
+	                c->c2.es);
 
-    /* allocate route list structure */
-    do_alloc_route_list(c);
+	    /* possibly add routes */
+	    if ((route_order() == ROUTE_AFTER_TUN) && (!c->options.route_delay_defined))
+	    {
+	        do_route(&c->options, c->c1.route_list, c->c1.route_ipv6_list, c->c1.tuntap, c->plugins, c->c2.es);
+	    }
 
-    /* parse and resolve the route option list */
-    ASSERT(c->c2.link_socket);
-    if (c->options.routes && c->c1.route_list)
-    {
-        do_init_route_list(&c->options, c->c1.route_list,
-                           &c->c2.link_socket->info, c->c2.es);
-    }
-    if (c->options.routes_ipv6 && c->c1.route_ipv6_list)
-    {
-        do_init_route_ipv6_list(&c->options, c->c1.route_ipv6_list,
-                                &c->c2.link_socket->info, c->c2.es);
-    }
+	    /*
+	     * Did tun/tap driver give us an MTU?
+	     */
+	    if (c->c1.tuntap->post_open_mtu)
+	    {
+	        frame_set_mtu_dynamic(&c->c2.frame, c->c1.tuntap->post_open_mtu, SET_MTU_TUN | SET_MTU_UPPER_BOUND);
+	    }
 
-    /* do ifconfig */
-    if (!c->options.ifconfig_noexec
-        && ifconfig_order() == IFCONFIG_BEFORE_TUN_OPEN)
-    {
-        /* guess actual tun/tap unit number that will be returned
-         * by open_tun */
-        const char *guess = guess_tuntap_dev(c->options.dev,
-                                             c->options.dev_type,
-                                             c->options.dev_node,
-                                             &gc);
-        do_ifconfig(c->c1.tuntap, guess, TUN_MTU_SIZE(&c->c2.frame), c->c2.es);
-    }
+	    ret = true;
+	    static_context = c;
 
-    /* possibly add routes */
-    if (route_order() == ROUTE_BEFORE_TUN)
-    {
-        /* Ignore route_delay, would cause ROUTE_BEFORE_TUN to be ignored */
-        do_route(&c->options, c->c1.route_list, c->c1.route_ipv6_list,
-                 c->c1.tuntap, c->plugins, c->c2.es);
-    }
-#ifdef TARGET_ANDROID
-    /* Store the old fd inside the fd so open_tun can use it */
-    c->c1.tuntap->fd = oldtunfd;
-#endif
-    /* open the tun device */
-    open_tun(c->options.dev, c->options.dev_type, c->options.dev_node,
-             c->c1.tuntap);
+	}
+	else
+	{
+	    msg(M_INFO, "Preserving previous TUN/TAP instance: %s", c->c1.tuntap->actual_name);
 
-    /* set the hardware address */
-    if (c->options.lladdr)
-    {
-        set_lladdr(c->c1.tuntap->actual_name, c->options.lladdr, c->c2.es);
-    }
+	    /* explicitly set the ifconfig_* env vars */
+	    do_ifconfig_setenv(c->c1.tuntap, c->c2.es);
 
-    /* do ifconfig */
-    if (!c->options.ifconfig_noexec
-        && ifconfig_order() == IFCONFIG_AFTER_TUN_OPEN)
-    {
-        do_ifconfig(c->c1.tuntap, c->c1.tuntap->actual_name, TUN_MTU_SIZE(&c->c2.frame), c->c2.es);
-    }
+	    /* run the up script if user specified --up-restart */
+	    if (c->options.up_restart)
+	    {
+	        run_up_down(c->options.up_script,
+	                    c->plugins,
+	                    OPENVPN_PLUGIN_UP,
+	                    c->c1.tuntap->actual_name,
+	                    dev_type_string(c->options.dev, c->options.dev_type),
+	                    TUN_MTU_SIZE(&c->c2.frame),
+	                    EXPANDED_SIZE(&c->c2.frame),
+	                    print_in_addr_t(c->c1.tuntap->local, IA_EMPTY_IF_UNDEF, &gc),
+	                    print_in_addr_t(c->c1.tuntap->remote_netmask, IA_EMPTY_IF_UNDEF, &gc),
+	                    "restart",
+	                    NULL,
+	                    "up",
+	                    c->c2.es);
+	    }
+	}
 
-    /* run the up script */
-    run_up_down(c->options.up_script,
-                c->plugins,
-                OPENVPN_PLUGIN_UP,
-                c->c1.tuntap->actual_name,
-#ifdef _WIN32
-                c->c1.tuntap->adapter_index,
-#endif
-                dev_type_string(c->options.dev, c->options.dev_type),
-                TUN_MTU_SIZE(&c->c2.frame),
-                EXPANDED_SIZE(&c->c2.frame),
-                print_in_addr_t(c->c1.tuntap->local, IA_EMPTY_IF_UNDEF, &gc),
-                print_in_addr_t(c->c1.tuntap->remote_netmask, IA_EMPTY_IF_UNDEF, &gc),
-                "init",
-                NULL,
-                "up",
-                c->c2.es);
-
-#if defined(_WIN32)
-    if (c->options.block_outside_dns)
-    {
-        dmsg(D_LOW, "Blocking outside DNS");
-        if (!win_wfp_block_dns(c->c1.tuntap->adapter_index, c->options.msg_channel))
-        {
-            msg(M_FATAL, "Blocking DNS failed!");
-        }
-    }
-#endif
-
-    /* possibly add routes */
-    if ((route_order() == ROUTE_AFTER_TUN) && (!c->options.route_delay_defined))
-    {
-        do_route(&c->options, c->c1.route_list, c->c1.route_ipv6_list,
-                 c->c1.tuntap, c->plugins, c->c2.es);
-    }
-
-    /*
-     * Did tun/tap driver give us an MTU?
-     */
-    if (c->c1.tuntap->post_open_mtu)
-    {
-        frame_set_mtu_dynamic(&c->c2.frame,
-                              c->c1.tuntap->post_open_mtu,
-                              SET_MTU_TUN | SET_MTU_UPPER_BOUND);
-    }
-
-    ret = true;
-    static_context = c;
-#ifndef TARGET_ANDROID
-}
-else
-{
-    msg(M_INFO, "Preserving previous TUN/TAP instance: %s",
-        c->c1.tuntap->actual_name);
-
-    /* explicitly set the ifconfig_* env vars */
-    do_ifconfig_setenv(c->c1.tuntap, c->c2.es);
-
-    /* run the up script if user specified --up-restart */
-    if (c->options.up_restart)
-    {
-        run_up_down(c->options.up_script,
-                    c->plugins,
-                    OPENVPN_PLUGIN_UP,
-                    c->c1.tuntap->actual_name,
-#ifdef _WIN32
-                    c->c1.tuntap->adapter_index,
-#endif
-                    dev_type_string(c->options.dev, c->options.dev_type),
-                    TUN_MTU_SIZE(&c->c2.frame),
-                    EXPANDED_SIZE(&c->c2.frame),
-                    print_in_addr_t(c->c1.tuntap->local, IA_EMPTY_IF_UNDEF, &gc),
-                    print_in_addr_t(c->c1.tuntap->remote_netmask, IA_EMPTY_IF_UNDEF, &gc),
-                    "restart",
-                    NULL,
-                    "up",
-                    c->c2.es);
-    }
-#if defined(_WIN32)
-    if (c->options.block_outside_dns)
-    {
-        dmsg(D_LOW, "Blocking outside DNS");
-        if (!win_wfp_block_dns(c->c1.tuntap->adapter_index, c->options.msg_channel))
-        {
-            msg(M_FATAL, "Blocking DNS failed!");
-        }
-    }
-#endif
-
-}
-#endif /* ifndef TARGET_ANDROID */
     gc_free(&gc);
     return ret;
 }
@@ -2504,8 +2426,7 @@ do_init_crypto_static(struct context *c, const unsigned int flags)
     if (!key_ctx_bi_defined(&c->c1.ks.static_key))
     {
         /* Get cipher & hash algorithms */
-        init_key_type(&c->c1.ks.key_type, options->ciphername, options->authname,
-                      options->keysize, options->test_crypto, true);
+        init_key_type(&c->c1.ks.key_type, options->ciphername, options->authname, options->keysize, options->test_crypto, true);
 
         /* Read cipher and hmac keys from shared secret file */
         crypto_read_openvpn_key(&c->c1.ks.key_type, &c->c1.ks.static_key,
@@ -2546,8 +2467,7 @@ do_init_tls_wrap_key(struct context *c)
         if (!streq(options->authname, "none"))
         {
             c->c1.ks.tls_auth_key_type.digest = md_kt_get(options->authname);
-                c->c1.ks.tls_auth_key_type.hmac_length =
-                    md_kt_size(c->c1.ks.tls_auth_key_type.digest);
+			c->c1.ks.tls_auth_key_type.hmac_length = md_kt_size(c->c1.ks.tls_auth_key_type.digest);
         }
         else
         {
@@ -2615,8 +2535,7 @@ do_init_crypto_tls_c1(struct context *c)
         }
 
         /* Get cipher & hash algorithms */
-        init_key_type(&c->c1.ks.key_type, options->ciphername, options->authname,
-                      options->keysize, true, true);
+        init_key_type(&c->c1.ks.key_type, options->ciphername, options->authname, options->keysize, true, true);
 
         /* Initialize PRNG with config-specified digest */
         prng_init(options->prng_hash, options->prng_nonce_secret_len);
@@ -2680,8 +2599,7 @@ do_init_crypto_tls(struct context *c, const unsigned int flags)
     }
     else
     {
-        crypto_adjust_frame_parameters(&c->c2.frame, &c->c1.ks.key_type,
-                                       options->replay, packet_id_long_form);
+        crypto_adjust_frame_parameters(&c->c2.frame, &c->c1.ks.key_type, options->replay, packet_id_long_form);
     }
     tls_adjust_frame_parameters(&c->c2.frame);
 
@@ -2835,8 +2753,7 @@ do_init_crypto_tls(struct context *c, const unsigned int flags)
         to.tls_wrap.opt.key_ctx_bi = c->c1.ks.tls_wrap_key;
         to.tls_wrap.opt.pid_persist = &c->c1.pid_persist;
         to.tls_wrap.opt.flags |= CO_PACKET_ID_LONG_FORM;
-        crypto_adjust_frame_parameters(&to.frame, &c->c1.ks.tls_auth_key_type,
-                                       true, true);
+        crypto_adjust_frame_parameters(&to.frame, &c->c1.ks.tls_auth_key_type, true, true);
     }
 
     /* TLS handshake encryption (--tls-crypt) */
@@ -3535,8 +3452,7 @@ do_close_fragment(struct context *c)
  */
 
 static void
-do_event_set_init(struct context *c,
-                  bool need_us_timeout)
+do_event_set_init(struct context *c, bool need_us_timeout)
 {
     unsigned int flags = 0;
 
@@ -4437,8 +4353,7 @@ inherit_context_child(struct context *dest,
 }
 
 void
-inherit_context_top(struct context *dest,
-                    const struct context *src)
+inherit_context_top(struct context *dest, const struct context *src)
 {
     /* copy parent */
     *dest = *src;

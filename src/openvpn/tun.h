@@ -197,11 +197,7 @@ struct tuntap
 static inline bool
 tuntap_defined(const struct tuntap *tt)
 {
-#ifdef _WIN32
-    return tt && tt->hand != NULL;
-#else
     return tt && tt->fd >= 0;
-#endif
 }
 
 /*
@@ -510,11 +506,7 @@ tun_event_handle(const struct tuntap *tt)
 }
 
 static inline unsigned int
-tun_set(struct tuntap *tt,
-        struct event_set *es,
-        unsigned int rwflags,
-        void *arg,
-        unsigned int *persistent)
+tun_set(struct tuntap *tt, struct event_set *es, unsigned int rwflags, void *arg, unsigned int *persistent)
 {
     if (tuntap_defined(tt))
     {
@@ -527,12 +519,6 @@ tun_set(struct tuntap *tt,
                 *persistent = rwflags;
             }
         }
-#ifdef _WIN32
-        if (rwflags & EVENT_READ)
-        {
-            tun_read_queue(tt, 0);
-        }
-#endif
         tt->rwflags_debug = rwflags;
     }
     return rwflags;

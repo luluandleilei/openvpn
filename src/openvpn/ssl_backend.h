@@ -461,22 +461,19 @@ int key_state_read_ciphertext(struct key_state_ssl *ks_ssl, struct buffer *buf,
 /**
  * Insert a ciphertext buffer into the TLS module.
  *
- * After successfully processing the data, the data in \a buf is zeroized,
- * its length set to zero, and a value of \c 1 is returned.
+ * After successfully processing the data, the data in buf is zeroized,
+ * its length set to zero, and a value of 1 is returned.
  *
- * @param ks_ssl       - The security parameter state for this %key
- *                       session.
+ * @param ks_ssl       - The security parameter state for this key session.
  * @param buf          - The ciphertext message to process.
  *
- * @return The return value indicates whether the data was successfully
- *     processed:
+ * @return The return value indicates whether the data was successfully processed:
  * - \c 1: All the data was processed successfully.
  * - \c 0: The data was not processed, this function should be called
  *   again later to retry.
  * - \c -1: An error occurred.
  */
-int key_state_write_ciphertext(struct key_state_ssl *ks_ssl,
-                               struct buffer *buf);
+int key_state_write_ciphertext(struct key_state_ssl *ks_ssl, struct buffer *buf);
 
 /**
  * Extract plaintext data from the TLS module.

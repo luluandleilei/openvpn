@@ -245,11 +245,7 @@ incoming_push_message(struct context *c, const struct buffer *buffer)
 
     msg(D_PUSH, "PUSH: Received control message: '%s'", sanitize_control_message(BSTR(buffer), &gc));
 
-    status = process_incoming_push_msg(c,
-                                       buffer,
-                                       c->options.pull,
-                                       pull_permission_mask(c),
-                                       &option_types_found);
+    status = process_incoming_push_msg(c, buffer, c->options.pull, pull_permission_mask(c), &option_types_found);
 
     if (status == PUSH_MSG_ERROR)
     {

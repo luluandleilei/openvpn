@@ -553,8 +553,7 @@ error:
  * Run after UDP read.
  */
 void
-socks_process_incoming_udp(struct buffer *buf,
-                           struct link_socket_actual *from)
+socks_process_incoming_udp(struct buffer *buf, struct link_socket_actual *from)
 {
     int atyp;
 

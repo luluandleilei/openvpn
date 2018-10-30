@@ -820,17 +820,7 @@ init_options(struct options *o, const bool init_gc)
 #ifdef TARGET_LINUX
     o->tuntap_options.txqueuelen = 100;
 #endif
-#ifdef _WIN32
-#if 0
-    o->tuntap_options.ip_win32_type = IPW32_SET_ADAPTIVE;
-#else
-    o->tuntap_options.ip_win32_type = IPW32_SET_DHCP_MASQ;
-#endif
-    o->tuntap_options.dhcp_lease_time = 31536000; /* one year */
-    o->tuntap_options.dhcp_masq_offset = 0;     /* use network address as internal DHCP server address */
-    o->route_method = ROUTE_METHOD_ADAPTIVE;
-    o->block_outside_dns = false;
-#endif
+
 #if P2MP_SERVER
     o->real_hash_size = 256;
     o->virtual_hash_size = 256;
@@ -2247,8 +2237,7 @@ options_postprocess_verify_ce(const struct options *options, const struct connec
         }
         /* <connection> blocks force to have a remote embedded, so we check for the
          * --remote and bail out if it  is present */
-        if (options->connection_list->len >1
-            || options->connection_list->array[0]->remote)
+        if (options->connection_list->len >1 || options->connection_list->array[0]->remote)
         {
             msg(M_USAGE, "<connection> cannot be used with --mode server");
         }
@@ -2834,10 +2823,9 @@ options_postprocess_mutate_ce(struct options *o, struct connection_entry *ce)
     {
         if (ce->tls_auth_file && !ce->tls_auth_file_inline)
         {
-            struct buffer in = buffer_read_from_file(o->tls_auth_file, &o->gc);
+            struct buffer in = buffer_read_from_file(o->tls_auth_file, &o->gc);	//XXX: c->tls_auth_file ?
             if (!buf_valid(&in))
-                msg(M_FATAL, "Cannot pre-load tls-auth keyfile (%s)",
-                    o->tls_auth_file);
+                msg(M_FATAL, "Cannot pre-load tls-auth keyfile (%s)", o->tls_auth_file);
 
             ce->tls_auth_file = INLINE_FILE_TAG;
             ce->tls_auth_file_inline = (char *)in.data;
@@ -2845,10 +2833,9 @@ options_postprocess_mutate_ce(struct options *o, struct connection_entry *ce)
 
         if (ce->tls_crypt_file && !ce->tls_crypt_inline)
         {
-            struct buffer in = buffer_read_from_file(o->tls_crypt_file, &o->gc);
+            struct buffer in = buffer_read_from_file(o->tls_crypt_file, &o->gc); //XXX: c->tls_crypt_file ?
             if (!buf_valid(&in))
-                msg(M_FATAL, "Cannot pre-load tls-crypt keyfile (%s)",
-                    o->tls_auth_file);
+                msg(M_FATAL, "Cannot pre-load tls-crypt keyfile (%s)", o->tls_auth_file);
 
             ce->tls_crypt_file = INLINE_FILE_TAG;
             ce->tls_crypt_inline = (char *)in.data;
@@ -3275,52 +3262,37 @@ options_postprocess_filechecks(struct options *options)
     {
         struct connection_entry *ce = options->connection_list->array[i];
 
-        errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE,
-                                  ce->tls_auth_file, R_OK, "--tls-auth");
+        errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE, ce->tls_auth_file, R_OK, "--tls-auth");
 
-        errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE,
-                                  ce->tls_crypt_file, R_OK, "--tls-crypt");
+        errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE, ce->tls_crypt_file, R_OK, "--tls-crypt");
 
     }
 
-    errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE,
-                              options->shared_secret_file, R_OK, "--secret");
+    errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE, options->shared_secret_file, R_OK, "--secret");
 
-    errs |= check_file_access(CHKACC_DIRPATH|CHKACC_FILEXSTWR,
-                              options->packet_id_file, R_OK|W_OK, "--replay-persist");
+    errs |= check_file_access(CHKACC_DIRPATH|CHKACC_FILEXSTWR, options->packet_id_file, R_OK|W_OK, "--replay-persist");
 
     /* ** Password files ** */
-    errs |= check_file_access(CHKACC_FILE|CHKACC_ACPTSTDIN|CHKACC_PRIVATE,
-                              options->key_pass_file, R_OK, "--askpass");
+    errs |= check_file_access(CHKACC_FILE|CHKACC_ACPTSTDIN|CHKACC_PRIVATE, options->key_pass_file, R_OK, "--askpass");
 #ifdef ENABLE_MANAGEMENT
-    errs |= check_file_access(CHKACC_FILE|CHKACC_ACPTSTDIN|CHKACC_PRIVATE,
-                              options->management_user_pass, R_OK,
-                              "--management user/password file");
+    errs |= check_file_access(CHKACC_FILE|CHKACC_ACPTSTDIN|CHKACC_PRIVATE, options->management_user_pass, R_OK, "--management user/password file");
 #endif /* ENABLE_MANAGEMENT */
 #if P2MP
-    errs |= check_file_access(CHKACC_FILE|CHKACC_ACPTSTDIN|CHKACC_PRIVATE,
-                              options->auth_user_pass_file, R_OK,
-                              "--auth-user-pass");
+    errs |= check_file_access(CHKACC_FILE|CHKACC_ACPTSTDIN|CHKACC_PRIVATE, options->auth_user_pass_file, R_OK, "--auth-user-pass");
 #endif /* P2MP */
 
     /* ** System related ** */
-    errs |= check_file_access(CHKACC_FILE, options->chroot_dir,
-                              R_OK|X_OK, "--chroot directory");
-    errs |= check_file_access(CHKACC_DIRPATH|CHKACC_FILEXSTWR, options->writepid,
-                              R_OK|W_OK, "--writepid");
+    errs |= check_file_access(CHKACC_FILE, options->chroot_dir, R_OK|X_OK, "--chroot directory");
+    errs |= check_file_access(CHKACC_DIRPATH|CHKACC_FILEXSTWR, options->writepid, R_OK|W_OK, "--writepid");
 
     /* ** Log related ** */
-    errs |= check_file_access(CHKACC_DIRPATH|CHKACC_FILEXSTWR, options->status_file,
-                              R_OK|W_OK, "--status");
+    errs |= check_file_access(CHKACC_DIRPATH|CHKACC_FILEXSTWR, options->status_file, R_OK|W_OK, "--status");
 
     /* ** Config related ** */
-    errs |= check_file_access_chroot(options->chroot_dir, CHKACC_FILE, options->tls_export_cert,
-                                     R_OK|W_OK|X_OK, "--tls-export-cert");
+    errs |= check_file_access_chroot(options->chroot_dir, CHKACC_FILE, options->tls_export_cert, R_OK|W_OK|X_OK, "--tls-export-cert");
 #if P2MP_SERVER
-    errs |= check_file_access_chroot(options->chroot_dir, CHKACC_FILE, options->client_config_dir,
-                                     R_OK|X_OK, "--client-config-dir");
-    errs |= check_file_access_chroot(options->chroot_dir, CHKACC_FILE, options->tmp_dir,
-                                     R_OK|W_OK|X_OK, "Temporary directory (--tmp-dir)");
+    errs |= check_file_access_chroot(options->chroot_dir, CHKACC_FILE, options->client_config_dir, R_OK|X_OK, "--client-config-dir");
+    errs |= check_file_access_chroot(options->chroot_dir, CHKACC_FILE, options->tmp_dir, R_OK|W_OK|X_OK, "Temporary directory (--tmp-dir)");
 
 #endif /* P2MP_SERVER */
 
@@ -3612,11 +3584,9 @@ options_string(const struct options *o,
                + (TLS_SERVER == true)
                <= 1);
 
-        init_key_type(&kt, o->ciphername, o->authname, o->keysize, true,
-                      false);
+        init_key_type(&kt, o->ciphername, o->authname, o->keysize, true, false);
 
-        buf_printf(&out, ",cipher %s",
-                   translate_cipher_name_to_openvpn(cipher_kt_name(kt.cipher)));
+        buf_printf(&out, ",cipher %s", translate_cipher_name_to_openvpn(cipher_kt_name(kt.cipher)));
         buf_printf(&out, ",auth %s", md_kt_name(kt.digest));
         buf_printf(&out, ",keysize %d", kt.cipher_length * 8);
         if (o->shared_secret_file)
@@ -4172,16 +4142,6 @@ positive_atoi(const char *str)
     return i < 0 ? 0 : i;
 }
 
-#ifdef _WIN32  /* This function is only used when compiling on Windows */
-static unsigned int
-atou(const char *str)
-{
-    unsigned int val = 0;
-    sscanf(str, "%u", &val);
-    return val;
-}
-#endif
-
 static inline bool
 space(unsigned char c)
 {
@@ -4490,15 +4450,7 @@ check_inline_file_via_buf(struct buffer *multiline, char *p[], struct gc_arena *
 }
 
 static void
-add_option(struct options *options,
-           char *p[],
-           const char *file,
-           int line,
-           const int level,
-           const int msglevel,
-           const unsigned int permission_mask,
-           unsigned int *option_types_found,
-           struct env_set *es);
+add_option(struct options *options, char *p[], const char *file, int line, const int level, const int msglevel, const unsigned int permission_mask, unsigned int *option_types_found, struct env_set *es);
 
 static void
 read_config_file(struct options *options,
@@ -4604,13 +4556,7 @@ read_config_string(const char *prefix,
 }
 
 void
-parse_argv(struct options *options,
-           const int argc,
-           char *argv[],
-           const int msglevel,
-           const unsigned int permission_mask,
-           unsigned int *option_types_found,
-           struct env_set *es)
+parse_argv(struct options *options, const int argc, char *argv[], const int msglevel, const unsigned int permission_mask, unsigned int *option_types_found, struct env_set *es)
 {
     int i, j;
 
@@ -4774,14 +4720,8 @@ options_string_import(struct options *options,
 #define VERIFY_PERMISSION(mask) { if (!verify_permission(p[0], file, line, (mask), permission_mask, option_types_found, msglevel, options)) {goto err;}}
 
 static bool
-verify_permission(const char *name,
-                  const char *file,
-                  int line,
-                  const unsigned int type,
-                  const unsigned int allowed,
-                  unsigned int *found,
-                  const int msglevel,
-                  struct options *options)
+verify_permission(const char *name, const char *file, int line, const unsigned int type,
+	const unsigned int allowed, unsigned int *found, const int msglevel, struct options *options)
 {
     if (!(type & allowed))
     {
@@ -4802,8 +4742,7 @@ verify_permission(const char *name,
      * connection_list
      */
 
-    if ((type & OPT_P_CONNECTION) && options->connection_list
-        && !(allowed & OPT_P_PULL_MODE))
+    if ((type & OPT_P_CONNECTION) && options->connection_list && !(allowed & OPT_P_PULL_MODE))
     {
         if (file)
         {
@@ -4897,15 +4836,8 @@ set_user_script(struct options *options,
 
 
 static void
-add_option(struct options *options,
-           char *p[],
-           const char *file,
-           int line,
-           const int level,
-           const int msglevel,
-           const unsigned int permission_mask,
-           unsigned int *option_types_found,
-           struct env_set *es)
+add_option(struct options *options, char *p[], const char *file, int line, const int level, 
+	const int msglevel, const unsigned int permission_mask, unsigned int *option_types_found, struct env_set *es)
 {
     struct gc_arena gc = gc_new();
     const bool pull_mode = BOOL_CAST(permission_mask & OPT_P_PULL_MODE);
@@ -8078,10 +8010,7 @@ add_option(struct options *options,
         key_method = atoi(p[1]);
         if (key_method < KEY_METHOD_MIN || key_method > KEY_METHOD_MAX)
         {
-            msg(msglevel, "key_method parameter (%d) must be >= %d and <= %d",
-                key_method,
-                KEY_METHOD_MIN,
-                KEY_METHOD_MAX);
+            msg(msglevel, "key_method parameter (%d) must be >= %d and <= %d", key_method, KEY_METHOD_MIN, KEY_METHOD_MAX);
             goto err;
         }
         options->key_method = key_method;

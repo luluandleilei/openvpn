@@ -159,10 +159,6 @@ openvpn_main(int argc, char *argv[])
     return 1;
 #endif
 
-#ifdef _WIN32
-    SetConsoleOutputCP(CP_UTF8);
-#endif
-
     CLEAR(c);
 
     /* signify first time for components which can
@@ -348,40 +344,8 @@ openvpn_main(int argc, char *argv[])
     return 0;                               /* NOTREACHED */
 }
 
-#ifdef _WIN32
-int
-wmain(int argc, wchar_t *wargv[])
-{
-    char **argv;
-    int ret;
-    int i;
-
-    if ((argv = calloc(argc+1, sizeof(char *))) == NULL)
-    {
-        return 1;
-    }
-
-    for (i = 0; i < argc; i++)
-    {
-        int n = WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, NULL, 0, NULL, NULL);
-        argv[i] = malloc(n);
-        WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, argv[i], n, NULL, NULL);
-    }
-
-    ret = openvpn_main(argc, argv);
-
-    for (i = 0; i < argc; i++)
-    {
-        free(argv[i]);
-    }
-    free(argv);
-
-    return ret;
-}
-#else  /* ifdef _WIN32 */
 int
 main(int argc, char *argv[])
 {
     return openvpn_main(argc, argv);
 }
-#endif /* ifdef _WIN32 */

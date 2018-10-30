@@ -93,10 +93,7 @@ update_mstat_n_clients(const int n_clients)
 }
 
 static bool
-learn_address_script(const struct multi_context *m,
-                     const struct multi_instance *mi,
-                     const char *op,
-                     const struct mroute_addr *addr)
+learn_address_script(const struct multi_context *m, const struct multi_instance *mi, const char *op, const struct mroute_addr *addr)
 {
     struct gc_arena gc = gc_new();
     struct env_set *es;
@@ -126,10 +123,8 @@ learn_address_script(const struct multi_context *m,
     if (plugin_defined(plugins, OPENVPN_PLUGIN_LEARN_ADDRESS))
     {
         struct argv argv = argv_new();
-        argv_printf(&argv, "%s %s",
-                    op,
-                    mroute_addr_print(addr, &gc));
-        if (mi)
+        argv_printf(&argv, "%s %s", op, mroute_addr_print(addr, &gc));
+		if (mi)
         {
             argv_printf_cat(&argv, "%s", tls_common_name(mi->context.c2.tls_multi, false));
         }
@@ -166,18 +161,14 @@ void
 multi_ifconfig_pool_persist(struct multi_context *m, bool force)
 {
     /* write pool data to file */
-    if (m->ifconfig_pool
-        && m->top.c1.ifconfig_pool_persist
-        && (force || ifconfig_pool_write_trigger(m->top.c1.ifconfig_pool_persist)))
+    if (m->ifconfig_pool && m->top.c1.ifconfig_pool_persist && (force || ifconfig_pool_write_trigger(m->top.c1.ifconfig_pool_persist)))
     {
         ifconfig_pool_write(m->top.c1.ifconfig_pool_persist, m->ifconfig_pool);
     }
 }
 
 static void
-multi_reap_range(const struct multi_context *m,
-                 int start_bucket,
-                 int end_bucket)
+multi_reap_range(const struct multi_context *m, int start_bucket, int end_bucket)
 {
     struct gc_arena gc = gc_new();
     struct hash_iterator hi;
@@ -196,8 +187,7 @@ multi_reap_range(const struct multi_context *m,
         struct multi_route *r = (struct multi_route *) he->value;
         if (!multi_route_defined(m, r))
         {
-            dmsg(D_MULTI_DEBUG, "MULTI: REAP DEL %s",
-                 mroute_addr_print(&r->addr, &gc));
+            dmsg(D_MULTI_DEBUG, "MULTI: REAP DEL %s", mroute_addr_print(&r->addr, &gc));
             learn_address_script(m, NULL, "delete", &r->addr);
             multi_route_del(r);
             hash_iterator_delete_element(&hi);
@@ -1410,8 +1400,7 @@ check_stale_routes(struct multi_context *m)
         struct multi_route *r = (struct multi_route *) he->value;
         if (multi_route_defined(m, r) && difftime(now, r->last_reference) >= m->top.options.stale_routes_ageing_time)
         {
-            dmsg(D_MULTI_DEBUG, "MULTI: Deleting stale route for address '%s'",
-                 mroute_addr_print(&r->addr, &gc));
+            dmsg(D_MULTI_DEBUG, "MULTI: Deleting stale route for address '%s'", mroute_addr_print(&r->addr, &gc));
             learn_address_script(m, NULL, "delete", &r->addr);
             multi_route_del(r);
             hash_iterator_delete_element(&hi);

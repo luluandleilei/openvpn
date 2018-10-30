@@ -331,8 +331,7 @@ struct context_2
     /*
      * TLS-mode crypto objects.
      */
-    struct tls_multi *tls_multi; /**< TLS state structure for this VPN
-                                  *   tunnel. */
+    struct tls_multi *tls_multi; /**< TLS state structure for this VPN tunnel. */
 
     struct tls_auth_standalone *tls_auth_standalone;
     /**< TLS state structure required for the
@@ -497,11 +496,9 @@ struct context_2
  */
 struct context
 {
-    struct options options;     /**< Options loaded from command line or
-                                 *   configuration file. */
+    struct options options;     /* Options loaded from command line or configuration file. */
 
-    bool first_time;            /**< True on the first iteration of
-                                 *   OpenVPN's main loop. */
+    bool first_time;            /* True on the first iteration of OpenVPN's main loop. */
 
     /* context modes */
 #define CM_P2P            0  /* standalone point-to-point session or client */
@@ -518,7 +515,7 @@ struct context
                                  *   allocations done in the scope of this
                                  *   context structure. */
 
-    struct env_set *es;         /**< Set of environment variables. */
+    struct env_set *es;         /* Set of environment variables. */
 
     struct signal_info *sig;    /**< Internal error signaling object. */
 

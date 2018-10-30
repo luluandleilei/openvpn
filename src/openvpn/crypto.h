@@ -138,10 +138,10 @@ struct sha256_digest {
  */
 struct key_type
 {
-    uint8_t cipher_length;      /**< Cipher length, in bytes */
-    uint8_t hmac_length;        /**< HMAC length, in bytes */
-    const cipher_kt_t *cipher;  /**< Cipher static parameters */
-    const md_kt_t *digest;      /**< Message digest static parameters */
+    uint8_t cipher_length;      /* Cipher length, in bytes */
+    uint8_t hmac_length;        /* HMAC length, in bytes */
+    const cipher_kt_t *cipher;  /* Cipher static parameters */
+    const md_kt_t *digest;      /*  Message digest static parameters */
 };
 
 /**
@@ -150,10 +150,8 @@ struct key_type
  */
 struct key
 {
-    uint8_t cipher[MAX_CIPHER_KEY_LENGTH];
-    /**< %Key material for cipher operations. */
-    uint8_t hmac[MAX_HMAC_KEY_LENGTH];
-    /**< %Key material for HMAC operations. */
+    uint8_t cipher[MAX_CIPHER_KEY_LENGTH];	/* Key material for cipher operations. */
+    uint8_t hmac[MAX_HMAC_KEY_LENGTH]; 		/* Key material for HMAC operations. */
 };
 
 
@@ -163,11 +161,10 @@ struct key
  */
 struct key_ctx
 {
-    cipher_ctx_t *cipher;       /**< Generic cipher %context. */
-    hmac_ctx_t *hmac;           /**< Generic HMAC %context. */
-    uint8_t implicit_iv[OPENVPN_MAX_IV_LENGTH];
-    /**< The implicit part of the IV */
-    size_t implicit_iv_len;     /**< The length of implicit_iv */
+    cipher_ctx_t *cipher;       				/* Generic cipher context. */
+    hmac_ctx_t *hmac;           				/* Generic HMAC context. */
+    uint8_t implicit_iv[OPENVPN_MAX_IV_LENGTH]; /* The implicit part of the IV */
+    size_t implicit_iv_len;     				/* The length of implicit_iv */
 };
 
 #define KEY_DIRECTION_BIDIRECTIONAL 0 /* same keys for both directions */
@@ -218,10 +215,8 @@ struct key_direction_state
  */
 struct key_ctx_bi
 {
-    struct key_ctx encrypt;     /**< Cipher and/or HMAC contexts for sending
-                                 *   direction. */
-    struct key_ctx decrypt;     /**< cipher and/or HMAC contexts for
-                                 *   receiving direction. */
+    struct key_ctx encrypt;     /* Cipher and/or HMAC contexts for sending direction. */
+    struct key_ctx decrypt;     /* cipher and/or HMAC contexts for receiving direction. */
     bool initialized;
 };
 
@@ -231,31 +226,20 @@ struct key_ctx_bi
  */
 struct crypto_options
 {
-    struct key_ctx_bi key_ctx_bi;
-    /**< OpenSSL cipher and HMAC contexts for
-     *   both sending and receiving
-     *   directions. */
-    struct packet_id packet_id; /**< Current packet ID state for both
-                                 *   sending and receiving directions. */
-    struct packet_id_persist *pid_persist;
-    /**< Persistent packet ID state for
-     *   keeping state between successive
-     *   OpenVPN process startups. */
-
+    struct key_ctx_bi key_ctx_bi; /* OpenSSL cipher and HMAC contexts for both sending and receiving directions. */
+    struct packet_id packet_id; /* Current packet ID state for both sending and receiving directions. */
+    struct packet_id_persist *pid_persist; /* Persistent packet ID state for keeping state between successive OpenVPN process startups. */
+   
 #define CO_PACKET_ID_LONG_FORM  (1<<0)
-    /**< Bit-flag indicating whether to use
-    *   OpenVPN's long packet ID format. */
+    /* Bit-flag indicating whether to use OpenVPN's long packet ID format. */
 #define CO_IGNORE_PACKET_ID     (1<<1)
     /**< Bit-flag indicating whether to ignore
      *   the packet ID of a received packet.
      *   This flag is used during processing
      *   of the first packet received from a
      *   client. */
-#define CO_MUTE_REPLAY_WARNINGS (1<<2)
-    /**< Bit-flag indicating not to display
-     *   replay warnings. */
-    unsigned int flags;         /**< Bit-flags determining behavior of
-                                 *   security operation functions. */
+#define CO_MUTE_REPLAY_WARNINGS (1<<2) /* Bit-flag indicating not to display replay warnings. */
+    unsigned int flags;         /* Bit-flags determining behavior of security operation functions. */
 };
 
 #define CRYPT_ERROR(format) \
@@ -303,8 +287,7 @@ int read_key(struct key *key, const struct key_type *kt, struct buffer *buf);
  *                    more ciphers than static key mode.
  * @param warn        Print warnings when null cipher / auth is used.
  */
-void init_key_type(struct key_type *kt, const char *ciphername,
-                   const char *authname, int keysize, bool tls_mode, bool warn);
+void init_key_type(struct key_type *kt, const char *ciphername, const char *authname, int keysize, bool tls_mode, bool warn);
 
 /*
  * Key context functions

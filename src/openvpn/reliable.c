@@ -45,9 +45,7 @@
  * verify that test - base < extent while allowing for base or test wraparound
  */
 static inline bool
-reliable_pid_in_range1(const packet_id_type test,
-                       const packet_id_type base,
-                       const unsigned int extent)
+reliable_pid_in_range1(const packet_id_type test, const packet_id_type base, const unsigned int extent)
 {
     if (test >= base)
     {
@@ -58,7 +56,7 @@ reliable_pid_in_range1(const packet_id_type test,
     }
     else
     {
-        if ((test+0x80000000u) - (base+0x80000000u) < extent)
+        if ((test+0x80000000u) - (base+0x80000000u) < extent) //仅允许数值范围在0 - 0x80000000之间？
         {
             return true;
         }
@@ -71,9 +69,7 @@ reliable_pid_in_range1(const packet_id_type test,
  * verify that test < base + extent while allowing for base or test wraparound
  */
 static inline bool
-reliable_pid_in_range2(const packet_id_type test,
-                       const packet_id_type base,
-                       const unsigned int extent)
+reliable_pid_in_range2(const packet_id_type test, const packet_id_type base, const unsigned int extent)
 {
     if (base + extent >= base)
     {
@@ -97,8 +93,7 @@ reliable_pid_in_range2(const packet_id_type test,
  * verify that p1 < p2  while allowing for p1 or p2 wraparound
  */
 static inline bool
-reliable_pid_min(const packet_id_type p1,
-                 const packet_id_type p2)
+reliable_pid_min(const packet_id_type p1, const packet_id_type p2)
 {
     return !reliable_pid_in_range1(p1, p2, 0x80000000u);
 }
@@ -210,9 +205,7 @@ error:
 /* write a packet ID acknowledgement record to buf, */
 /* removing all acknowledged entries from ack */
 bool
-reliable_ack_write(struct reliable_ack *ack,
-                   struct buffer *buf,
-                   const struct session_id *sid, int max, bool prepend)
+reliable_ack_write(struct reliable_ack *ack, struct buffer *buf, const struct session_id *sid, int max, bool prepend)
 {
     int i, j;
     uint8_t n;
@@ -556,10 +549,7 @@ reliable_can_send(const struct reliable *rel)
             }
         }
     }
-    dmsg(D_REL_DEBUG, "ACK reliable_can_send active=%d current=%d : %s",
-         n_active,
-         n_current,
-         reliable_print_ids(rel, &gc));
+    dmsg(D_REL_DEBUG, "ACK reliable_can_send active=%d current=%d : %s", n_active, n_current, reliable_print_ids(rel, &gc));
 
     gc_free(&gc);
     return n_current > 0 && !rel->hold;
@@ -596,8 +586,7 @@ reliable_send(struct reliable *rel, int *opcode)
 #endif
         *opcode = best->opcode;
         dmsg(D_REL_DEBUG, "ACK reliable_send ID " packet_id_format " (size=%d to=%d)",
-             (packet_id_print_type)best->packet_id, best->buf.len,
-             (int)(best->next_try - local_now));
+             (packet_id_print_type)best->packet_id, best->buf.len, (int)(best->next_try - local_now));
         return &best->buf;
     }
     return NULL;
