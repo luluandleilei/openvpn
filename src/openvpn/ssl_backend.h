@@ -216,8 +216,7 @@ void tls_ctx_check_cert_time(const struct tls_root_ctx *ctx);
  *                              "[[INLINE]]" in the case of inline files.
  * @param dh_file_inline        A string containing the parameters
  */
-void tls_ctx_load_dh_params(struct tls_root_ctx *ctx, const char *dh_file,
-                            const char *dh_file_inline);
+void tls_ctx_load_dh_params(struct tls_root_ctx *ctx, const char *dh_file, const char *dh_file_inline);
 
 /**
  * Load Elliptic Curve Parameters, and load them into the library-specific
@@ -226,8 +225,7 @@ void tls_ctx_load_dh_params(struct tls_root_ctx *ctx, const char *dh_file,
  * @param ctx          TLS context to use
  * @param curve_name   The name of the elliptic curve to load.
  */
-void tls_ctx_load_ecdh_params(struct tls_root_ctx *ctx, const char *curve_name
-                              );
+void tls_ctx_load_ecdh_params(struct tls_root_ctx *ctx, const char *curve_name );
 
 /**
  * Load PKCS #12 file for key, cert and (optionally) CA certs, and add to
@@ -241,9 +239,7 @@ void tls_ctx_load_ecdh_params(struct tls_root_ctx *ctx, const char *curve_name
  * @return                      1 if an error occurred, 0 if parsing was
  *                              successful.
  */
-int tls_ctx_load_pkcs12(struct tls_root_ctx *ctx, const char *pkcs12_file,
-                        const char *pkcs12_file_inline, bool load_ca_file
-                        );
+int tls_ctx_load_pkcs12(struct tls_root_ctx *ctx, const char *pkcs12_file, const char *pkcs12_file_inline, bool load_ca_file);
 
 /**
  * Use Windows cryptoapi for key and cert, and add to library-specific TLS
@@ -309,8 +305,7 @@ int tls_ctx_use_management_external_key(struct tls_root_ctx *ctx);
  * @param ca_path               The path to load the CAs from
  */
 void tls_ctx_load_ca(struct tls_root_ctx *ctx, const char *ca_file,
-                     const char *ca_file_inline, const char *ca_path, bool tls_server
-                     );
+                     const char *ca_file_inline, const char *ca_path, bool tls_server);
 
 /**
  * Load extra certificate authority certificates from the given file or path.
@@ -324,8 +319,7 @@ void tls_ctx_load_ca(struct tls_root_ctx *ctx, const char *ca_file,
  * @param extra_certs_file_inline       A string containing the certs
  */
 void tls_ctx_load_extra_certs(struct tls_root_ctx *ctx, const char *extra_certs_file,
-                              const char *extra_certs_file_inline
-                              );
+                              const char *extra_certs_file_inline);
 
 #ifdef ENABLE_CRYPTO_MBEDTLS
 /**
@@ -353,8 +347,7 @@ void tls_ctx_personalise_random(struct tls_root_ctx *ctx);
  * @param is_server     Initialise a server?
  * @param session       The session associated with the given key_state
  */
-void key_state_ssl_init(struct key_state_ssl *ks_ssl,
-                        const struct tls_root_ctx *ssl_ctx, bool is_server, struct tls_session *session);
+void key_state_ssl_init(struct key_state_ssl *ks_ssl, const struct tls_root_ctx *ssl_ctx, bool is_server, struct tls_session *session);
 
 /**
  * Free the SSL channel part of the given key state.
@@ -371,8 +364,7 @@ void key_state_ssl_free(struct key_state_ssl *ks_ssl);
  *                      "[[INLINE]]" in the case of inline files.
  * @param crl_inline    A string containing the CRL
  */
-void backend_tls_ctx_reload_crl(struct tls_root_ctx *ssl_ctx,
-                                const char *crl_file, const char *crl_inline);
+void backend_tls_ctx_reload_crl(struct tls_root_ctx *ssl_ctx, const char *crl_file, const char *crl_inline);
 
 /**
  * Keying Material Exporters [RFC 5705] allows additional keying material to be
@@ -523,10 +515,7 @@ void print_details(struct key_state_ssl *ks_ssl, const char *prefix);
  * @param tls13             Select if <=TLS1.2 or TLS1.3+ ciphers
  *                          should be shown
  */
-void
-show_available_tls_ciphers_list(const char *cipher_list,
-                                const char *tls_cert_profile,
-                                bool tls13);
+void show_available_tls_ciphers_list(const char *cipher_list, const char *tls_cert_profile, bool tls13);
 
 /*
  * Show the available elliptic curves in the crypto library

@@ -136,12 +136,12 @@ tunnel_point_to_point(struct context *c)
  * This function contains the two outer OpenVPN loops.  Its structure is
  * as follows:
  *  - Once-per-process initialization.
- *  - Outer loop, run at startup and then once per \c SIGHUP:
+ *  - Outer loop, run at startup and then once per SIGHUP:
  *    - Level 1 initialization
- *    - Inner loop, run at startup and then once per \c SIGUSR1:
+ *    - Inner loop, run at startup and then once per SIGUSR1:
  *      - Call event loop function depending on client or server mode:
- *        - \c tunnel_point_to_point()
- *        - \c tunnel_server()
+ *        - tunnel_point_to_point()
+ *        - tunnel_server()
  *    - Level 1 cleanup
  *  - Once-per-process cleanup.
  *
@@ -169,8 +169,7 @@ openvpn_main(int argc, char *argv[])
     if (init_static())
     {
         /*
-         * This loop is initially executed on startup and then
-         * once per SIGHUP.
+         * This loop is initially executed on startup and then once per SIGHUP.
          */
         do
         {
@@ -189,9 +188,6 @@ openvpn_main(int argc, char *argv[])
 
             /* initialize environmental variable store */
             c.es = env_set_create(NULL);
-#ifdef _WIN32
-            set_win_sys_path_via_env(c.es);
-#endif
 
 #ifdef ENABLE_MANAGEMENT
             /* initialize management subsystem */
@@ -243,9 +239,7 @@ openvpn_main(int argc, char *argv[])
 
             /* print version number */
             msg(M_INFO, "%s", title_string);
-#ifdef _WIN32
-            show_windows_version(M_INFO);
-#endif
+
             show_library_versions(M_INFO);
 
             /* misc stuff */

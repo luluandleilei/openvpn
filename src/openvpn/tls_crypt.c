@@ -65,18 +65,15 @@ tls_crypt_buf_overhead(void)
 }
 
 void
-tls_crypt_init_key(struct key_ctx_bi *key, const char *key_file,
-                   const char *key_inline, bool tls_server)
+tls_crypt_init_key(struct key_ctx_bi *key, const char *key_file, const char *key_inline, bool tls_server)
 {
-    const int key_direction = tls_server ?
-                              KEY_DIRECTION_NORMAL : KEY_DIRECTION_INVERSE;
+    const int key_direction = tls_server ? KEY_DIRECTION_NORMAL : KEY_DIRECTION_INVERSE;
     struct key_type kt = tls_crypt_kt();
     if (!kt.cipher || !kt.digest)
     {
         msg (M_FATAL, "ERROR: --tls-crypt not supported");
     }
-    crypto_read_openvpn_key(&kt, key, key_file, key_inline, key_direction,
-                            "Control Channel Encryption", "tls-crypt");
+    crypto_read_openvpn_key(&kt, key, key_file, key_inline, key_direction, "Control Channel Encryption", "tls-crypt");
 }
 
 void

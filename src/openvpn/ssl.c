@@ -425,11 +425,7 @@ auth_user_pass_setup(const char *auth_file, const struct static_challenge_info *
             {
                 flags |= GET_USER_PASS_STATIC_CHALLENGE_ECHO;
             }
-            get_user_pass_cr(&auth_user_pass,
-                             auth_file,
-                             UP_TYPE_AUTH,
-                             flags,
-                             sci->challenge_text);
+            get_user_pass_cr(&auth_user_pass, auth_file, UP_TYPE_AUTH, flags, sci->challenge_text);
         }
         else
 #endif /* ifdef ENABLE_MANAGEMENT */
@@ -605,8 +601,7 @@ init_ssl(const struct options *options, struct tls_root_ctx *new_ctx)
 
         if (options->dh_file)
         {
-            tls_ctx_load_dh_params(new_ctx, options->dh_file,
-                                   options->dh_file_inline);
+            tls_ctx_load_dh_params(new_ctx, options->dh_file, options->dh_file_inline);
         }
     }
     else                        /* if client */
@@ -630,8 +625,7 @@ init_ssl(const struct options *options, struct tls_root_ctx *new_ctx)
 
     if (options->pkcs12_file)
     {
-        if (0 != tls_ctx_load_pkcs12(new_ctx, options->pkcs12_file,
-                                     options->pkcs12_file_inline, !options->ca_file))
+        if (0 != tls_ctx_load_pkcs12(new_ctx, options->pkcs12_file, options->pkcs12_file_inline, !options->ca_file))
         {
             goto err;
         }
@@ -641,8 +635,7 @@ init_ssl(const struct options *options, struct tls_root_ctx *new_ctx)
     {
         if (!tls_ctx_use_pkcs11(new_ctx, options->pkcs11_id_management, options->pkcs11_id))
         {
-            msg(M_WARN, "Cannot load certificate \"%s\" using PKCS#11 interface",
-                options->pkcs11_id);
+            msg(M_WARN, "Cannot load certificate \"%s\" using PKCS#11 interface", options->pkcs11_id);
             goto err;
         }
     }
@@ -669,8 +662,7 @@ init_ssl(const struct options *options, struct tls_root_ctx *new_ctx)
 
     if (options->priv_key_file)
     {
-        if (0 != tls_ctx_load_priv_file(new_ctx, options->priv_key_file,
-                                        options->priv_key_file_inline))
+        if (0 != tls_ctx_load_priv_file(new_ctx, options->priv_key_file, options->priv_key_file_inline))
         {
             goto err;
         }
@@ -688,8 +680,7 @@ init_ssl(const struct options *options, struct tls_root_ctx *new_ctx)
 
     if (options->ca_file || options->ca_path)
     {
-        tls_ctx_load_ca(new_ctx, options->ca_file, options->ca_file_inline,
-                        options->ca_path, options->tls_server);
+        tls_ctx_load_ca(new_ctx, options->ca_file, options->ca_file_inline, options->ca_path, options->tls_server);
     }
 
     /* Load extra certificates that are part of our own certificate
@@ -4073,9 +4064,7 @@ tls_check_ncp_cipher_list(const char *list)
 }
 
 void
-show_available_tls_ciphers(const char *cipher_list,
-                           const char *cipher_list_tls13,
-                           const char *tls_cert_profile)
+show_available_tls_ciphers(const char *cipher_list, const char *cipher_list_tls13, const char *tls_cert_profile)
 {
     printf("Available TLS Ciphers, listed in order of preference:\n");
 

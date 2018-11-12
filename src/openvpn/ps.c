@@ -742,10 +742,7 @@ bad:
  * This is the main function for the port share proxy background process.
  */
 static void
-port_share_proxy(const struct sockaddr_in hostaddr,
-                 const socket_descriptor_t sd_control,
-                 const int max_initial_buf,
-                 const char *journal_dir)
+port_share_proxy(const struct sockaddr_in hostaddr, const socket_descriptor_t sd_control, const int max_initial_buf, const char *journal_dir)
 {
     if (send_control(sd_control, RESPONSE_INIT_SUCCEEDED) >= 0)
     {
@@ -813,14 +810,10 @@ done:
 }
 
 /*
- * Called from the main OpenVPN process to enable the port
- * share proxy.
+ * Called from the main OpenVPN process to enable the port share proxy.
  */
 struct port_share *
-port_share_open(const char *host,
-                const char *port,
-                const int max_initial_buf,
-                const char *journal_dir)
+port_share_open(const char *host, const char *port, const int max_initial_buf, const char *journal_dir)
 {
     pid_t pid;
     socket_descriptor_t fd[2];
@@ -837,9 +830,8 @@ port_share_open(const char *host,
      * Get host's IP address
      */
 
-    status = openvpn_getaddrinfo(GETADDR_RESOLVE|GETADDR_FATAL,
-                                 host, port,  0, NULL, AF_INET, &ai);
-    ASSERT(status==0);
+    status = openvpn_getaddrinfo(GETADDR_RESOLVE|GETADDR_FATAL, host, port,  0, NULL, AF_INET, &ai);
+	ASSERT(status==0);
     hostaddr = *((struct sockaddr_in *) ai->ai_addr);
     freeaddrinfo(ai);
 

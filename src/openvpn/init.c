@@ -672,8 +672,7 @@ context_init_1(struct context *c)
      * do any fork due to daemon() a future call.
      * See possibly_become_daemon() [init.c] for more details.
      */
-    sd_notifyf(0, "READY=1\nSTATUS=Pre-connection initialization successful\nMAINPID=%lu",
-               (unsigned long) getpid());
+    sd_notifyf(0, "READY=1\nSTATUS=Pre-connection initialization successful\nMAINPID=%lu", (unsigned long) getpid());
 #endif
 
 }
@@ -1023,9 +1022,7 @@ print_openssl_info(const struct options *options)
         }
         if (options->show_tls_ciphers)
         {
-            show_available_tls_ciphers(options->cipher_list,
-                                       options->cipher_list_tls13,
-                                       options->tls_cert_profile);
+            show_available_tls_ciphers(options->cipher_list, options->cipher_list_tls13, options->tls_cert_profile);
         }
         if (options->show_curves)
         {
@@ -1590,12 +1587,8 @@ initialization_sequence_completed(struct context *c, const unsigned int flags)
  * based on options.
  */
 void
-do_route(const struct options *options,
-         struct route_list *route_list,
-         struct route_ipv6_list *route_ipv6_list,
-         const struct tuntap *tt,
-         const struct plugin_list *plugins,
-         struct env_set *es)
+do_route(const struct options *options, struct route_list *route_list, struct route_ipv6_list *route_ipv6_list,
+         const struct tuntap *tt, const struct plugin_list *plugins, struct env_set *es)
 {
     if (!options->route_noexec && ( route_list || route_ipv6_list ) )
     {
@@ -1625,19 +1618,6 @@ do_route(const struct options *options,
         openvpn_run_script(&argv, es, 0, "--route-up");
         argv_reset(&argv);
     }
-
-#ifdef _WIN32
-    if (options->show_net_up)
-    {
-        show_routes(M_INFO|M_NOPREFIX);
-        show_adapters(M_INFO|M_NOPREFIX);
-    }
-    else if (check_debug_level(D_SHOW_NET))
-    {
-        show_routes(D_SHOW_NET|M_NOPREFIX);
-        show_adapters(D_SHOW_NET|M_NOPREFIX);
-    }
-#endif
 }
 
 /*
@@ -2475,20 +2455,14 @@ do_init_tls_wrap_key(struct context *c)
                 "algorithm specified ('%s')", options->authname);
         }
 
-        crypto_read_openvpn_key(&c->c1.ks.tls_auth_key_type,
-                                &c->c1.ks.tls_wrap_key,
-                                options->ce.tls_auth_file,
-                                options->ce.tls_auth_file_inline,
-                                options->ce.key_direction,
-                                "Control Channel Authentication", "tls-auth");
+        crypto_read_openvpn_key(&c->c1.ks.tls_auth_key_type, &c->c1.ks.tls_wrap_key, options->ce.tls_auth_file,
+        	options->ce.tls_auth_file_inline, options->ce.key_direction, "Control Channel Authentication", "tls-auth");
     }
 
     /* TLS handshake encryption+authentication (--tls-crypt) */
     if (options->ce.tls_crypt_file)
     {
-        tls_crypt_init_key(&c->c1.ks.tls_wrap_key,
-                           options->ce.tls_crypt_file,
-                           options->ce.tls_crypt_inline, options->tls_server);
+        tls_crypt_init_key(&c->c1.ks.tls_wrap_key, options->ce.tls_crypt_file, options->ce.tls_crypt_inline, options->tls_server);
     }
 }
 
@@ -2504,8 +2478,7 @@ do_init_crypto_tls_c1(struct context *c)
     if (!tls_ctx_initialised(&c->c1.ks.ssl_ctx))
     {
         /*
-         * Initialize the OpenSSL library's global
-         * SSL context.
+         * Initialize the OpenSSL library's global SSL context.
          */
         init_ssl(options, &(c->c1.ks.ssl_ctx));
         if (!tls_ctx_initialised(&c->c1.ks.ssl_ctx))
@@ -2636,16 +2609,14 @@ do_init_crypto_tls(struct context *c, const unsigned int flags)
     if (options->renegotiate_seconds_min < 0)
     {
         /* Add 10% jitter to reneg-sec by default (server side only) */
-        int auto_jitter = options->mode != MODE_SERVER ? 0 :
-                get_random() % max_int(options->renegotiate_seconds / 10, 1);
+        int auto_jitter = options->mode != MODE_SERVER ? 0 : get_random() % max_int(options->renegotiate_seconds / 10, 1);
         to.renegotiate_seconds = options->renegotiate_seconds - auto_jitter;
     }
     else
     {
         /* Add user-specified jitter to reneg-sec */
         to.renegotiate_seconds = options->renegotiate_seconds -
-                (get_random() % max_int(options->renegotiate_seconds
-                                        - options->renegotiate_seconds_min, 1));
+                (get_random() % max_int(options->renegotiate_seconds - options->renegotiate_seconds_min, 1));
     }
     to.single_session = options->single_session;
     to.mode = options->mode;
@@ -2663,8 +2634,7 @@ do_init_crypto_tls(struct context *c, const unsigned int flags)
         to.push_peer_info_detail = 0;
     }
 
-    /* should we not xmit any packets until we get an initial
-     * response from client? */
+    /* should we not xmit any packets until we get an initial response from client? */
     if (to.server && options->ce.proto == PROTO_TCP_SERVER)
     {
         to.xmit_hold = true;
@@ -2766,8 +2736,7 @@ do_init_crypto_tls(struct context *c, const unsigned int flags)
         tls_crypt_adjust_frame_parameters(&to.frame);
     }
 
-    /* If we are running over TCP, allow for
-     * length prefix */
+    /* If we are running over TCP, allow for length prefix */
     socket_adjust_frame_parameters(&to.frame, options->ce.proto);
 
     /*
@@ -2790,16 +2759,13 @@ do_init_finalize_tls_frame(struct context *c)
     if (c->c2.tls_multi)
     {
         tls_multi_init_finalize(c->c2.tls_multi, &c->c2.frame);
-        ASSERT(EXPANDED_SIZE(&c->c2.tls_multi->opt.frame) <=
-               EXPANDED_SIZE(&c->c2.frame));
-        frame_print(&c->c2.tls_multi->opt.frame, D_MTU_INFO,
-                    "Control Channel MTU parms");
+        ASSERT(EXPANDED_SIZE(&c->c2.tls_multi->opt.frame) <= EXPANDED_SIZE(&c->c2.frame));
+        frame_print(&c->c2.tls_multi->opt.frame, D_MTU_INFO, "Control Channel MTU parms");
     }
     if (c->c2.tls_auth_standalone)
     {
         tls_auth_standalone_finalize(c->c2.tls_auth_standalone, &c->c2.frame);
-        frame_print(&c->c2.tls_auth_standalone->frame, D_MTU_INFO,
-                    "TLS-Auth MTU parms");
+        frame_print(&c->c2.tls_auth_standalone->frame, D_MTU_INFO, "TLS-Auth MTU parms");
     }
 }
 
@@ -2870,9 +2836,7 @@ do_init_frame(struct context *c)
         if (comp_unswapped_prefix(&c->options.comp) && CIPHER_ENABLED(c))
         {
             frame_add_to_align_adjust(&c->c2.frame, COMP_PREFIX_LEN);
-            frame_or_align_flags(&c->c2.frame,
-                                 FRAME_HEADROOM_MARKER_FRAGMENT
-                                 |FRAME_HEADROOM_MARKER_DECRYPT);
+            frame_or_align_flags(&c->c2.frame, FRAME_HEADROOM_MARKER_FRAGMENT |FRAME_HEADROOM_MARKER_DECRYPT);
         }
 #endif
 
@@ -3489,11 +3453,7 @@ do_open_status_output(struct context *c)
 {
     if (!c->c1.status_output)
     {
-        c->c1.status_output = status_open(c->options.status_file,
-                                          c->options.status_file_update_freq,
-                                          -1,
-                                          NULL,
-                                          STATUS_OUTPUT_WRITE);
+        c->c1.status_output = status_open(c->options.status_file, c->options.status_file_update_freq, -1, NULL, STATUS_OUTPUT_WRITE);
         c->c1.status_output_owned = true;
     }
 }

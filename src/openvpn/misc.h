@@ -131,10 +131,7 @@ bool get_user_pass_cr(struct user_pass *up,
                       const char *auth_challenge);
 
 static inline bool
-get_user_pass(struct user_pass *up,
-              const char *auth_file,
-              const char *prefix,
-              const unsigned int flags)
+get_user_pass(struct user_pass *up, const char *auth_file, const char *prefix, const unsigned int flags)
 {
     return get_user_pass_cr(up, auth_file, prefix, flags, NULL);
 }

@@ -111,8 +111,7 @@ struct gc_entry_special
  */
 struct gc_arena
 {
-    struct gc_entry *list;      /**< First element of the linked list of
-                                 *   \c gc_entry structures. */
+    struct gc_entry *list;      /* First element of the linked list of gc_entry structures. */
     struct gc_entry_special *list_special;
 };
 

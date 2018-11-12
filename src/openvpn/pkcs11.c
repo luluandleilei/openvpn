@@ -665,11 +665,7 @@ cleanup:
 }
 
 int
-tls_ctx_use_pkcs11(
-    struct tls_root_ctx *const ssl_ctx,
-    bool pkcs11_id_management,
-    const char *const pkcs11_id
-    )
+tls_ctx_use_pkcs11( struct tls_root_ctx *const ssl_ctx, bool pkcs11_id_management, const char *const pkcs11_id)
 {
     pkcs11h_certificate_id_t certificate_id = NULL;
     pkcs11h_certificate_t certificate = NULL;
@@ -680,13 +676,8 @@ tls_ctx_use_pkcs11(
     ASSERT(ssl_ctx!=NULL);
     ASSERT(pkcs11_id_management || pkcs11_id!=NULL);
 
-    dmsg(
-        D_PKCS11_DEBUG,
-        "PKCS#11: tls_ctx_use_pkcs11 - entered - ssl_ctx=%p, pkcs11_id_management=%d, pkcs11_id='%s'",
-        (void *)ssl_ctx,
-        pkcs11_id_management ? 1 : 0,
-        pkcs11_id
-        );
+    dmsg( D_PKCS11_DEBUG, "PKCS#11: tls_ctx_use_pkcs11 - entered - ssl_ctx=%p, pkcs11_id_management=%d, pkcs11_id='%s'",
+        (void *)ssl_ctx, pkcs11_id_management ? 1 : 0, pkcs11_id );
 
     if (pkcs11_id_management)
     {

@@ -76,8 +76,7 @@ try_load_engine(const char *engine)
     ENGINE *e = ENGINE_by_id("dynamic");
     if (e)
     {
-        if (!ENGINE_ctrl_cmd_string(e, "SO_PATH", engine, 0)
-            || !ENGINE_ctrl_cmd_string(e, "LOAD", NULL, 0))
+        if (!ENGINE_ctrl_cmd_string(e, "SO_PATH", engine, 0) || !ENGINE_ctrl_cmd_string(e, "LOAD", NULL, 0))
         {
             ENGINE_free(e);
             e = NULL;
@@ -101,22 +100,17 @@ setup_engine(const char *engine)
             ENGINE_register_all_complete();
             return NULL;
         }
-        if ((e = ENGINE_by_id(engine)) == NULL
-            && (e = try_load_engine(engine)) == NULL)
+        if ((e = ENGINE_by_id(engine)) == NULL && (e = try_load_engine(engine)) == NULL)
         {
-            crypto_msg(M_FATAL, "OpenSSL error: cannot load engine '%s'",
-                       engine);
+            crypto_msg(M_FATAL, "OpenSSL error: cannot load engine '%s'", engine);
         }
 
         if (!ENGINE_set_default(e, ENGINE_METHOD_ALL))
         {
-            crypto_msg(M_FATAL,
-                       "OpenSSL error: ENGINE_set_default failed on engine '%s'",
-                       engine);
+            crypto_msg(M_FATAL, "OpenSSL error: ENGINE_set_default failed on engine '%s'", engine);
         }
 
-        msg(M_INFO, "Initializing OpenSSL support for engine '%s'",
-            ENGINE_get_id(e));
+        msg(M_INFO, "Initializing OpenSSL support for engine '%s'", ENGINE_get_id(e));
     }
     return e;
 }
@@ -342,8 +336,7 @@ show_available_digests(void)
         const EVP_MD *digest = EVP_get_digestbynid(nid);
         if (digest)
         {
-            printf("%s %d bit digest size\n",
-                   OBJ_nid2sn(nid), EVP_MD_size(digest) * 8);
+            printf("%s %d bit digest size\n", OBJ_nid2sn(nid), EVP_MD_size(digest) * 8);
         }
     }
     printf("\n");
@@ -362,9 +355,7 @@ show_available_engines(void)
     e = ENGINE_get_first();
     while (e)
     {
-        printf("%s [%s]\n",
-               ENGINE_get_name(e),
-               ENGINE_get_id(e));
+        printf("%s [%s]\n", ENGINE_get_name(e), ENGINE_get_id(e));
         e = ENGINE_get_next(e);
     }
     ENGINE_cleanup();
@@ -515,20 +506,17 @@ key_des_check(uint8_t *key, int key_len, int ndc)
         DES_cblock *dc = (DES_cblock *) buf_read_alloc(&b, sizeof(DES_cblock));
         if (!dc)
         {
-            crypto_msg(D_CRYPT_ERRORS,
-                       "CRYPTO INFO: check_key_DES: insufficient key material");
+            crypto_msg(D_CRYPT_ERRORS, "CRYPTO INFO: check_key_DES: insufficient key material");
             goto err;
         }
         if (DES_is_weak_key(dc))
         {
-            crypto_msg(D_CRYPT_ERRORS,
-                       "CRYPTO INFO: check_key_DES: weak key detected");
+            crypto_msg(D_CRYPT_ERRORS, "CRYPTO INFO: check_key_DES: weak key detected");
             goto err;
         }
         if (!DES_check_key_parity(dc))
         {
-            crypto_msg(D_CRYPT_ERRORS,
-                       "CRYPTO INFO: check_key_DES: bad parity detected");
+            crypto_msg(D_CRYPT_ERRORS, "CRYPTO INFO: check_key_DES: bad parity detected");
             goto err;
         }
     }
@@ -754,8 +742,7 @@ cipher_ctx_free(EVP_CIPHER_CTX *ctx)
 }
 
 void
-cipher_ctx_init(EVP_CIPHER_CTX *ctx, const uint8_t *key, int key_len,
-                const EVP_CIPHER *kt, int enc)
+cipher_ctx_init(EVP_CIPHER_CTX *ctx, const uint8_t *key, int key_len, const EVP_CIPHER *kt, int enc)
 {
     ASSERT(NULL != kt && NULL != ctx);
 
@@ -1014,8 +1001,7 @@ hmac_ctx_free(HMAC_CTX *ctx)
 }
 
 void
-hmac_ctx_init(HMAC_CTX *ctx, const uint8_t *key, int key_len,
-              const EVP_MD *kt)
+hmac_ctx_init(HMAC_CTX *ctx, const uint8_t *key, int key_len, const EVP_MD *kt)
 {
     ASSERT(NULL != kt && NULL != ctx);
 

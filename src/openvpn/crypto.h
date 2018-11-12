@@ -141,7 +141,7 @@ struct key_type
     uint8_t cipher_length;      /* Cipher length, in bytes */
     uint8_t hmac_length;        /* HMAC length, in bytes */
     const cipher_kt_t *cipher;  /* Cipher static parameters */
-    const md_kt_t *digest;      /*  Message digest static parameters */
+    const md_kt_t *digest;      /* Message digest static parameters */
 };
 
 /**
@@ -177,10 +177,8 @@ struct key_ctx
  */
 struct key2
 {
-    int n;                      /**< The number of \c key objects stored
-                                 *   in the \c key2.keys array. */
-    struct key keys[2];         /**< Two unidirectional sets of %key
-                                 *   material. */
+    int n;                      /**< The number of key objects stored in the key2.keys array. */
+    struct key keys[2];         /**< Two unidirectional sets of key material. */
 };
 
 /**
@@ -194,18 +192,11 @@ struct key2
  */
 struct key_direction_state
 {
-    int out_key;                /**< Index into the \c key2.keys array for
-                                 *   the sending direction. */
-    int in_key;                 /**< Index into the \c key2.keys array for
-                                 *   the receiving direction. */
-    int need_keys;              /**< The number of key objects necessary
-                                 *   to support both sending and
-                                 *   receiving.
-                                 *
-                                 *   This will be 1 if the same keys are
-                                 *   used in both directions, or 2 if
-                                 *   there are two sets of unidirectional
-                                 *   keys. */
+    int out_key;                /* Index into the key2.keys array for the sending direction. */
+    int in_key;                 /* Index into the key2.keys array for the receiving direction. */
+    int need_keys;              /* The number of key objects necessary to support both sending and receiving.
+  								 * This will be 1 if the same keys are used in both directions, or 2 if
+                                 * there are two sets of unidirectional keys. */
 };
 
 /**
@@ -299,9 +290,7 @@ void init_key_ctx(struct key_ctx *ctx, const struct key *key,
 
 void free_key_ctx(struct key_ctx *ctx);
 
-void init_key_ctx_bi(struct key_ctx_bi *ctx, const struct key2 *key2,
-                     int key_direction, const struct key_type *kt,
-		     const char *name);
+void init_key_ctx_bi(struct key_ctx_bi *ctx, const struct key2 *key2, int key_direction, const struct key_type *kt, const char *name);
 
 void free_key_ctx_bi(struct key_ctx_bi *ctx);
 
@@ -462,10 +451,7 @@ int ascii2keydirection(int msglevel, const char *str);
 const char *keydirection2ascii(int kd, bool remote, bool humanreadable);
 
 /* print keys */
-void key2_print(const struct key2 *k,
-                const struct key_type *kt,
-                const char *prefix0,
-                const char *prefix1);
+void key2_print(const struct key2 *k, const struct key_type *kt, const char *prefix0, const char *prefix1);
 
 void crypto_read_openvpn_key(const struct key_type *key_type,
                              struct key_ctx_bi *ctx, const char *key_file, const char *key_inline,

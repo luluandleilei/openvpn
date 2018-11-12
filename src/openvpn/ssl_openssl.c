@@ -189,17 +189,13 @@ info_callback(INFO_CALLBACK_SSL_CONST SSL *s, int where, int ret)
 {
     if (where & SSL_CB_LOOP)
     {
-        dmsg(D_HANDSHAKE_VERBOSE, "SSL state (%s): %s",
-             where & SSL_ST_CONNECT ? "connect" :
-             where &SSL_ST_ACCEPT ? "accept" :
-             "undefined", SSL_state_string_long(s));
+        dmsg(D_HANDSHAKE_VERBOSE, "SSL state (%s): %s", where & SSL_ST_CONNECT ? "connect" :
+             where &SSL_ST_ACCEPT ? "accept" : "undefined", SSL_state_string_long(s));
     }
     else if (where & SSL_CB_ALERT)
     {
-        dmsg(D_HANDSHAKE_VERBOSE, "SSL alert (%s): %s: %s",
-             where & SSL_CB_READ ? "read" : "write",
-             SSL_alert_type_string_long(ret),
-             SSL_alert_desc_string_long(ret));
+        dmsg(D_HANDSHAKE_VERBOSE, "SSL alert (%s): %s: %s", where & SSL_CB_READ ? "read" : "write",
+             SSL_alert_type_string_long(ret), SSL_alert_desc_string_long(ret));
     }
 }
 
@@ -250,10 +246,8 @@ openssl_tls_version(int ver)
 static bool
 tls_ctx_set_tls_versions(struct tls_root_ctx *ctx, unsigned int ssl_flags)
 {
-    int tls_ver_min = openssl_tls_version(
-        (ssl_flags >> SSLF_TLS_VERSION_MIN_SHIFT) & SSLF_TLS_VERSION_MIN_MASK);
-    int tls_ver_max = openssl_tls_version(
-        (ssl_flags >> SSLF_TLS_VERSION_MAX_SHIFT) & SSLF_TLS_VERSION_MAX_MASK);
+    int tls_ver_min = openssl_tls_version((ssl_flags >> SSLF_TLS_VERSION_MIN_SHIFT) & SSLF_TLS_VERSION_MIN_MASK);
+    int tls_ver_max = openssl_tls_version((ssl_flags >> SSLF_TLS_VERSION_MAX_SHIFT) & SSLF_TLS_VERSION_MAX_MASK);
 
     if (!tls_ver_min)
     {
@@ -429,8 +423,7 @@ tls_ctx_restrict_ciphers(struct tls_root_ctx *ctx, const char *ciphers)
 }
 
 void
-convert_tls13_list_to_openssl(char *openssl_ciphers, size_t len,
-                              const char *ciphers)
+convert_tls13_list_to_openssl(char *openssl_ciphers, size_t len, const char *ciphers)
 {
     /*
      * OpenSSL (and official IANA) cipher names have _ in them. We
@@ -439,9 +432,7 @@ convert_tls13_list_to_openssl(char *openssl_ciphers, size_t len,
      */
     if (strlen(ciphers) >= (len - 1))
     {
-        msg(M_FATAL,
-            "Failed to set restricted TLS 1.3 cipher list, too long (>%d).",
-            (int) (len - 1));
+        msg(M_FATAL, "Failed to set restricted TLS 1.3 cipher list, too long (>%d).", (int) (len - 1));
     }
 
     strncpy(openssl_ciphers, ciphers, len);
@@ -466,20 +457,17 @@ tls_ctx_restrict_ciphers_tls13(struct tls_root_ctx *ctx, const char *ciphers)
     }
 
 #if (OPENSSL_VERSION_NUMBER < 0x1010100fL)
-        crypto_msg(M_WARN, "Not compiled with OpenSSL 1.1.1 or higher. "
-                       "Ignoring TLS 1.3 only tls-ciphersuites '%s' setting.",
-                        ciphers);
+	crypto_msg(M_WARN, "Not compiled with OpenSSL 1.1.1 or higher. "
+			"Ignoring TLS 1.3 only tls-ciphersuites '%s' setting.", ciphers);
 #else
     ASSERT(NULL != ctx);
 
     char openssl_ciphers[4096];
-    convert_tls13_list_to_openssl(openssl_ciphers, sizeof(openssl_ciphers),
-                                  ciphers);
+    convert_tls13_list_to_openssl(openssl_ciphers, sizeof(openssl_ciphers), ciphers);
 
     if (!SSL_CTX_set_ciphersuites(ctx->ctx, openssl_ciphers))
     {
-        crypto_msg(M_FATAL, "Failed to set restricted TLS 1.3 cipher list: %s",
-                   openssl_ciphers);
+        crypto_msg(M_FATAL, "Failed to set restricted TLS 1.3 cipher list: %s", openssl_ciphers);
     }
 #endif
 }
@@ -513,7 +501,7 @@ tls_ctx_set_cert_profile(struct tls_root_ctx *ctx, const char *profile)
     if (profile)
     {
         msg(M_WARN, "WARNING: OpenSSL 1.0.1 does not support --tls-cert-profile"
-            ", ignoring user-set profile: '%s'", profile);
+			", ignoring user-set profile: '%s'", profile);
     }
 #endif
 }
@@ -568,9 +556,7 @@ cleanup:
 }
 
 void
-tls_ctx_load_dh_params(struct tls_root_ctx *ctx, const char *dh_file,
-                       const char *dh_file_inline
-                       )
+tls_ctx_load_dh_params(struct tls_root_ctx *ctx, const char *dh_file, const char *dh_file_inline )
 {
     DH *dh;
     BIO *bio;
@@ -605,8 +591,7 @@ tls_ctx_load_dh_params(struct tls_root_ctx *ctx, const char *dh_file,
         crypto_msg(M_FATAL, "SSL_CTX_set_tmp_dh");
     }
 
-    msg(D_TLS_DEBUG_LOW, "Diffie-Hellman initialized with %d bit key",
-        8 * DH_size(dh));
+    msg(D_TLS_DEBUG_LOW, "Diffie-Hellman initialized with %d bit key", 8 * DH_size(dh));
 
     DH_free(dh);
 }
@@ -695,10 +680,7 @@ tls_ctx_load_ecdh_params(struct tls_root_ctx *ctx, const char *curve_name
 }
 
 int
-tls_ctx_load_pkcs12(struct tls_root_ctx *ctx, const char *pkcs12_file,
-                    const char *pkcs12_file_inline,
-                    bool load_ca_file
-                    )
+tls_ctx_load_pkcs12(struct tls_root_ctx *ctx, const char *pkcs12_file, const char *pkcs12_file_inline, bool load_ca_file)
 {
     FILE *fp;
     EVP_PKEY *pkey;
@@ -713,8 +695,7 @@ tls_ctx_load_pkcs12(struct tls_root_ctx *ctx, const char *pkcs12_file,
     if (!strcmp(pkcs12_file, INLINE_FILE_TAG) && pkcs12_file_inline)
     {
         BIO *b64 = BIO_new(BIO_f_base64());
-        BIO *bio = BIO_new_mem_buf((void *) pkcs12_file_inline,
-                                   (int) strlen(pkcs12_file_inline));
+        BIO *bio = BIO_new_mem_buf((void *) pkcs12_file_inline, (int) strlen(pkcs12_file_inline));
         ASSERT(b64 && bio);
         BIO_push(b64, bio);
         p12 = d2i_PKCS12_bio(b64, NULL);
@@ -859,8 +840,7 @@ tls_ctx_add_extra_certs(struct tls_root_ctx *ctx, BIO *bio)
 }
 
 void
-tls_ctx_load_cert_file(struct tls_root_ctx *ctx, const char *cert_file,
-                       const char *cert_file_inline)
+tls_ctx_load_cert_file(struct tls_root_ctx *ctx, const char *cert_file, const char *cert_file_inline)
 {
     BIO *in = NULL;
     X509 *x = NULL;
@@ -886,9 +866,7 @@ tls_ctx_load_cert_file(struct tls_root_ctx *ctx, const char *cert_file,
         goto end;
     }
 
-    x = PEM_read_bio_X509(in, NULL,
-                          SSL_CTX_get_default_passwd_cb(ctx->ctx),
-                          SSL_CTX_get_default_passwd_cb_userdata(ctx->ctx));
+    x = PEM_read_bio_X509(in, NULL, SSL_CTX_get_default_passwd_cb(ctx->ctx), SSL_CTX_get_default_passwd_cb_userdata(ctx->ctx));
     if (x == NULL)
     {
         SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE, ERR_R_PEM_LIB);
@@ -925,9 +903,7 @@ end:
 }
 
 int
-tls_ctx_load_priv_file(struct tls_root_ctx *ctx, const char *priv_key_file,
-                       const char *priv_key_file_inline
-                       )
+tls_ctx_load_priv_file(struct tls_root_ctx *ctx, const char *priv_key_file, const char *priv_key_file_inline)
 {
     SSL_CTX *ssl_ctx = NULL;
     BIO *in = NULL;
@@ -952,9 +928,7 @@ tls_ctx_load_priv_file(struct tls_root_ctx *ctx, const char *priv_key_file,
         goto end;
     }
 
-    pkey = PEM_read_bio_PrivateKey(in, NULL,
-                                   SSL_CTX_get_default_passwd_cb(ctx->ctx),
-                                   SSL_CTX_get_default_passwd_cb_userdata(ctx->ctx));
+    pkey = PEM_read_bio_PrivateKey(in, NULL, SSL_CTX_get_default_passwd_cb(ctx->ctx), SSL_CTX_get_default_passwd_cb_userdata(ctx->ctx));
     if (!pkey)
     {
         goto end;
@@ -1407,10 +1381,7 @@ sk_x509_name_cmp(const X509_NAME *const *a, const X509_NAME *const *b)
 }
 
 void
-tls_ctx_load_ca(struct tls_root_ctx *ctx, const char *ca_file,
-                const char *ca_file_inline,
-                const char *ca_path, bool tls_server
-                )
+tls_ctx_load_ca(struct tls_root_ctx *ctx, const char *ca_file, const char *ca_file_inline, const char *ca_path, bool tls_server)
 {
     STACK_OF(X509_INFO) *info_stack = NULL;
     STACK_OF(X509_NAME) *cert_names = NULL;
@@ -1561,8 +1532,7 @@ tls_ctx_load_ca(struct tls_root_ctx *ctx, const char *ca_file,
 
 void
 tls_ctx_load_extra_certs(struct tls_root_ctx *ctx, const char *extra_certs_file,
-                         const char *extra_certs_file_inline
-                         )
+                         const char *extra_certs_file_inline)
 {
     BIO *in;
     if (!strcmp(extra_certs_file, INLINE_FILE_TAG) && extra_certs_file_inline)
@@ -1797,8 +1767,7 @@ key_state_ssl_init(struct key_state_ssl *ks_ssl, const struct tls_root_ctx *ssl_
         crypto_msg(M_FATAL, "SSL_new failed");
     }
 
-    /* put session * in ssl object so we can access it
-     * from verify callback*/
+    /* put session * in ssl object so we can access it from verify callback*/
     SSL_set_ex_data(ks_ssl->ssl, mydata_index, session);
 
     ASSERT((ks_ssl->ssl_bio = BIO_new(BIO_f_ssl())));
@@ -1984,9 +1953,7 @@ print_details(struct key_state_ssl *ks_ssl, const char *prefix)
 }
 
 void
-show_available_tls_ciphers_list(const char *cipher_list,
-                                const char *tls_cert_profile,
-                                const bool tls13)
+show_available_tls_ciphers_list(const char *cipher_list, const char *tls_cert_profile, const bool tls13)
 {
     struct tls_root_ctx tls_ctx;
 

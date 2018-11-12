@@ -203,8 +203,7 @@ struct tls_wrap_ctx
 };
 
 /*
- * Our const options, obtained directly or derived from
- * command line options.
+ * Our const options, obtained directly or derived from command line options.
  */
 struct tls_options
 {
@@ -228,7 +227,7 @@ struct tls_options
 #endif
 
     /* from command line */
-    int key_method;
+    int key_method;		//data channel key exchange method
     bool replay;
     bool single_session;
 #ifdef ENABLE_OCC
@@ -269,7 +268,7 @@ struct tls_options
     int replay_time;                   /* --replay-window parm */
     bool tcp_mode;
 
-    const char *config_ciphername;
+    const char *config_ciphername;	/* Data channel cipher from config file? */
     const char *config_authname;
     bool ncp_enabled;
 
@@ -463,10 +462,11 @@ struct tls_multi
     /* const options and config info */
     struct tls_options opt;
 
-    struct key_state *key_scan[KEY_SCAN_SIZE];
-    /**< List of \c key_state objects in the
+	/* List of key_state objects in the
      *   order they should be scanned by data
      *   channel modules. */
+    struct key_state *key_scan[KEY_SCAN_SIZE];
+
 
     /*
      * used by tls_pre_encrypt to communicate the encrypt key
@@ -530,10 +530,10 @@ struct tls_multi
     /*
      * Our session objects.
      */
-    struct tls_session session[TM_SIZE];
-    /**< Array of \c tls_session objects
+	/**< Array of tls_session objects
      *   representing control channel
      *   sessions with the remote peer. */
+    struct tls_session session[TM_SIZE];
 };
 
 #endif /* SSL_COMMON_H_ */

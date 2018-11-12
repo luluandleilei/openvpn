@@ -436,14 +436,10 @@ packet_id_persist_load(struct packet_id_persist *p, const char *filename)
     if (!packet_id_persist_enabled(p))
     {
         /* open packet-id persist file for both read and write */
-        p->fd = platform_open(filename,
-                              O_CREAT | O_RDWR | O_BINARY,
-                              S_IRUSR | S_IWUSR);
+        p->fd = platform_open(filename, O_CREAT | O_RDWR | O_BINARY, S_IRUSR | S_IWUSR);
         if (p->fd == -1)
         {
-            msg(D_PID_PERSIST | M_ERRNO,
-                "Cannot open --replay-persist file %s for read/write",
-                filename);
+            msg(D_PID_PERSIST | M_ERRNO, "Cannot open --replay-persist file %s for read/write", filename);
         }
         else
         {
@@ -463,14 +459,11 @@ packet_id_persist_load(struct packet_id_persist *p, const char *filename)
             {
                 p->time = p->time_last_written = image.time;
                 p->id = p->id_last_written = image.id;
-                dmsg(D_PID_PERSIST_DEBUG, "PID Persist Read from %s: %s",
-                     p->filename, packet_id_persist_print(p, &gc));
+                dmsg(D_PID_PERSIST_DEBUG, "PID Persist Read from %s: %s", p->filename, packet_id_persist_print(p, &gc));
             }
             else if (n == -1)
             {
-                msg(D_PID_PERSIST | M_ERRNO,
-                    "Read error on --replay-persist file %s",
-                    p->filename);
+                msg(D_PID_PERSIST | M_ERRNO, "Read error on --replay-persist file %s", p->filename);
             }
         }
     }

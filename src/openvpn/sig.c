@@ -238,7 +238,6 @@ static int signal_mode; /* GLOBAL */
 void
 pre_init_signal_catch(void)
 {
-#ifndef _WIN32
 #ifdef HAVE_SIGNAL_H
     signal_mode = SM_PRE_INIT;
     signal(SIGINT, signal_handler);
@@ -248,13 +247,11 @@ pre_init_signal_catch(void)
     signal(SIGUSR2, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
 #endif /* HAVE_SIGNAL_H */
-#endif /* _WIN32 */
 }
 
 void
 post_init_signal_catch(void)
 {
-#ifndef _WIN32
 #ifdef HAVE_SIGNAL_H
     signal_mode = SM_POST_INIT;
     signal(SIGINT, signal_handler);
@@ -264,7 +261,6 @@ post_init_signal_catch(void)
     signal(SIGUSR2, signal_handler);
     signal(SIGPIPE, SIG_IGN);
 #endif /* HAVE_SIGNAL_H */
-#endif
 }
 
 /* called after daemonization to retain signal settings */

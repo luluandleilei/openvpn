@@ -107,9 +107,7 @@ query_user_exec(void)
  *
  */
 static inline bool
-query_user_SINGLE(char *prompt, size_t prompt_len,
-                  char *resp, size_t resp_len,
-                  bool echo)
+query_user_SINGLE(char *prompt, size_t prompt_len, char *resp, size_t resp_len, bool echo)
 {
     query_user_clear();
     query_user_add(prompt, prompt_len, resp, resp_len, echo);

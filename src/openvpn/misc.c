@@ -183,8 +183,7 @@ get_user_pass_cr(struct user_pass *up,
             struct buffer user_prompt = alloc_buf_gc(128, &gc);
 
             buf_printf(&user_prompt, "NEED-OK|%s|%s:", prefix, up->username);
-            if (!query_user_SINGLE(BSTR(&user_prompt), BLEN(&user_prompt),
-                                   up->password, USER_PASS_LEN, false))
+            if (!query_user_SINGLE(BSTR(&user_prompt), BLEN(&user_prompt), up->password, USER_PASS_LEN, false))
             {
                 msg(M_FATAL, "ERROR: could not read %s ok-confirmation from stdin", prefix);
             }
@@ -226,9 +225,7 @@ get_user_pass_cr(struct user_pass *up,
                 /* Read username first */
                 if (fgets(up->username, USER_PASS_LEN, fp) == NULL)
                 {
-                    msg(M_FATAL, "Error reading username from %s authfile: %s",
-                        prefix,
-                        auth_file);
+                    msg(M_FATAL, "Error reading username from %s authfile: %s", prefix, auth_file);
                 }
             }
             chomp(up->username);

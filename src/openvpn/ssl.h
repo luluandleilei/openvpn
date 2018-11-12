@@ -182,8 +182,7 @@ struct tls_multi *tls_multi_init(struct tls_options *tls_options);
  *                       initialization.
  * @param frame        - The data channel's \c frame structure.
  */
-void tls_multi_init_finalize(struct tls_multi *multi,
-                             const struct frame *frame);
+void tls_multi_init_finalize(struct tls_multi *multi, const struct frame *frame);
 
 /*
  * Initialize a standalone tls-auth verification object.
@@ -478,8 +477,7 @@ void tls_update_remote_addr(struct tls_multi *multi,
  *
  * @return true if updating succeeded, false otherwise.
  */
-bool tls_session_update_crypto_params(struct tls_session *session,
-                                      struct options *options, struct frame *frame);
+bool tls_session_update_crypto_params(struct tls_session *session, struct options *options, struct frame *frame);
 
 /**
  * "Poor man's NCP": Use peer cipher if it is an allowed (NCP) cipher.
@@ -607,9 +605,6 @@ void delayed_auth_pass_purge(void);
  * @param cipher_list_tls13 list of allowed TLS 1.3+ cipher, or NULL
  * @param tls_cert_profile  TLS certificate crypto profile name.
  */
-void
-show_available_tls_ciphers(const char *cipher_list,
-                           const char *cipher_list_tls13,
-                           const char *tls_cert_profile);
+void show_available_tls_ciphers(const char *cipher_list, const char *cipher_list_tls13, const char *tls_cert_profile);
 
 #endif /* ifndef OPENVPN_SSL_H */

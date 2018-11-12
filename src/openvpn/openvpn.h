@@ -162,14 +162,13 @@ struct context_1
     /* persist crypto sequence number to/from file */
     struct packet_id_persist pid_persist;
 
-    struct tuntap *tuntap;      /**< Tun/tap virtual network interface. */
-    bool tuntap_owned;          /**< Whether the tun/tap interface should
-                                 *   be cleaned up when this %context is
-                                 *   cleaned up. */
-
+	/* Tun/tap virtual network interface. */
+    struct tuntap *tuntap;      
+    bool tuntap_owned;          /* Whether the tun/tap interface should be cleaned up when this context is cleaned up. */
+                                 
+	/* List of routing information. See the --route command line option. */
     struct route_list *route_list;
-    /**< List of routing information. See the
-     *   \c --route command line option. */
+  
 
     /* list of --route-ipv6 directives */
     struct route_ipv6_list *route_ipv6_list;
@@ -194,19 +193,16 @@ struct context_1
     bool ifconfig_pool_persist_owned;
 #endif
 
-    /* if client mode, hash of option strings we pulled from server */
+    //if client mode, hash of option strings we pulled from server 
+    //Hash of option strings received from the remote OpenVPN server.  
+    //Only used in client-mode. 
     struct sha256_digest pulled_options_digest_save;
-    /**< Hash of option strings received from the
-     *   remote OpenVPN server.  Only used in
-     *   client-mode. */
 
-    struct user_pass *auth_user_pass;
-    /**< Username and password for
-     *   authentication. */
+    struct user_pass *auth_user_pass; /* Username and password for authentication. */
 
-    const char *ciphername;     /**< Data channel cipher from config file */
-    const char *authname;       /**< Data channel auth from config file */
-    int keysize;                /**< Data channel keysize from config file */
+    const char *ciphername;     /* Data channel cipher from config file */
+    const char *authname;       /* Data channel auth from config file */
+    int keysize;                /* Data channel keysize from config file */
 #endif
 };
 
@@ -511,27 +507,27 @@ struct context
                                  *   CM_P2P, \c CM_TOP, \c CM_TOP_CLONE,
                                  *   \c CM_CHILD_UDP, and \c CM_CHILD_TCP. */
 
-    struct gc_arena gc;         /**< Garbage collection arena for
-                                 *   allocations done in the scope of this
-                                 *   context structure. */
+	/* Garbage collection arena for allocations done in the scope of this context structure. */
+    struct gc_arena gc;         
+	/* Set of environment variables. */
+    struct env_set *es;         
 
-    struct env_set *es;         /* Set of environment variables. */
+	/* Internal error signaling object. */
+    struct signal_info *sig;    
 
-    struct signal_info *sig;    /**< Internal error signaling object. */
+	/* List of plug-ins. */
+    struct plugin_list *plugins; 
+	/* Whether the plug-ins should be cleaned up when this context is cleaned up. */
+    bool plugins_owned;         
+                                 
+	/* Whether demonization has already taken place. */
+    bool did_we_daemonize;      
 
-    struct plugin_list *plugins; /**< List of plug-ins. */
-    bool plugins_owned;         /**< Whether the plug-ins should be
-                                 *   cleaned up when this %context is
-                                 *   cleaned up. */
-
-    bool did_we_daemonize;      /**< Whether demonization has already
-                                 *   taken place. */
-
-    struct context_persist persist;
-    /**< Persistent %context. */
-    struct context_0 *c0;       /**< Level 0 %context. */
-    struct context_1 c1;        /**< Level 1 %context. */
-    struct context_2 c2;        /**< Level 2 %context. */
+    struct context_persist persist;	/* Persistent context. */
+    
+    struct context_0 *c0;       	/* Level 0 context. */
+    struct context_1 c1;        	/* Level 1 context. */
+    struct context_2 c2;        	/* Level 2 context. */
 };
 
 /*

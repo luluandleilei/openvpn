@@ -300,8 +300,7 @@ err:
 }
 
 void
-openvpn_encrypt(struct buffer *buf, struct buffer work,
-                struct crypto_options *opt)
+openvpn_encrypt(struct buffer *buf, struct buffer work, struct crypto_options *opt)
 {
     if (buf->len > 0 && opt)
     {
@@ -695,10 +694,7 @@ openvpn_decrypt(struct buffer *buf, struct buffer work,
 }
 
 void
-crypto_adjust_frame_parameters(struct frame *frame,
-                               const struct key_type *kt,
-                               bool packet_id,
-                               bool packet_id_long_form)
+crypto_adjust_frame_parameters(struct frame *frame, const struct key_type *kt, bool packet_id, bool packet_id_long_form)
 {
     unsigned int crypto_overhead = 0;
 
@@ -724,8 +720,7 @@ crypto_adjust_frame_parameters(struct frame *frame,
 
     frame_add_to_extra_frame(frame, crypto_overhead);
 
-    msg(D_MTU_DEBUG, "%s: Adjusting frame parameters for crypto by %u bytes",
-        __func__, crypto_overhead);
+    msg(D_MTU_DEBUG, "%s: Adjusting frame parameters for crypto by %u bytes", __func__, crypto_overhead);
 }
 
 unsigned int
@@ -817,29 +812,21 @@ init_key_type(struct key_type *kt, const char *ciphername, const char *authname,
 
 /* given a key and key_type, build a key_ctx */
 void
-init_key_ctx(struct key_ctx *ctx, const struct key *key,
-             const struct key_type *kt, int enc,
-             const char *prefix)
+init_key_ctx(struct key_ctx *ctx, const struct key *key, const struct key_type *kt, int enc, const char *prefix)
 {
     struct gc_arena gc = gc_new();
     CLEAR(*ctx);
     if (kt->cipher && kt->cipher_length > 0)
     {
-
         ctx->cipher = cipher_ctx_new();
-        cipher_ctx_init(ctx->cipher, key->cipher, kt->cipher_length,
-                        kt->cipher, enc);
+        cipher_ctx_init(ctx->cipher, key->cipher, kt->cipher_length, kt->cipher, enc);
 
-        msg(D_HANDSHAKE, "%s: Cipher '%s' initialized with %d bit key",
-            prefix,
-            translate_cipher_name_to_openvpn(cipher_kt_name(kt->cipher)),
-            kt->cipher_length *8);
+        msg(D_HANDSHAKE, "%s: Cipher '%s' initialized with %d bit key", prefix,
+            translate_cipher_name_to_openvpn(cipher_kt_name(kt->cipher)), kt->cipher_length *8);
 
-        dmsg(D_SHOW_KEYS, "%s: CIPHER KEY: %s", prefix,
-             format_hex(key->cipher, kt->cipher_length, 0, &gc));
+        dmsg(D_SHOW_KEYS, "%s: CIPHER KEY: %s", prefix, format_hex(key->cipher, kt->cipher_length, 0, &gc));
         dmsg(D_CRYPTO_DEBUG, "%s: CIPHER block_size=%d iv_size=%d",
-             prefix, cipher_kt_block_size(kt->cipher),
-             cipher_kt_iv_size(kt->cipher));
+             prefix, cipher_kt_block_size(kt->cipher), cipher_kt_iv_size(kt->cipher));
         if (cipher_kt_insecure(kt->cipher))
         {
             msg(M_WARN, "WARNING: INSECURE cipher with block size less than 128"
@@ -853,17 +840,12 @@ init_key_ctx(struct key_ctx *ctx, const struct key *key,
         ctx->hmac = hmac_ctx_new();
         hmac_ctx_init(ctx->hmac, key->hmac, kt->hmac_length, kt->digest);
 
-        msg(D_HANDSHAKE,
-            "%s: Using %d bit message hash '%s' for HMAC authentication",
-            prefix, md_kt_size(kt->digest) * 8, md_kt_name(kt->digest));
+        msg(D_HANDSHAKE, "%s: Using %d bit message hash '%s' for HMAC authentication",
+			prefix, md_kt_size(kt->digest) * 8, md_kt_name(kt->digest));
 
-        dmsg(D_SHOW_KEYS, "%s: HMAC KEY: %s", prefix,
-             format_hex(key->hmac, kt->hmac_length, 0, &gc));
+        dmsg(D_SHOW_KEYS, "%s: HMAC KEY: %s", prefix, format_hex(key->hmac, kt->hmac_length, 0, &gc));
 
-        dmsg(D_CRYPTO_DEBUG, "%s: HMAC size=%d block_size=%d",
-             prefix,
-             md_kt_size(kt->digest),
-             hmac_ctx_size(ctx->hmac));
+        dmsg(D_CRYPTO_DEBUG, "%s: HMAC size=%d block_size=%d", prefix, md_kt_size(kt->digest), hmac_ctx_size(ctx->hmac));
 
     }
     gc_free(&gc);
@@ -879,12 +861,10 @@ init_key_ctx_bi(struct key_ctx_bi *ctx, const struct key2 *key2,
     key_direction_state_init(&kds, key_direction);
 
     openvpn_snprintf(log_prefix, sizeof(log_prefix), "Outgoing %s", name);
-    init_key_ctx(&ctx->encrypt, &key2->keys[kds.out_key], kt,
-                 OPENVPN_OP_ENCRYPT, log_prefix);
+    init_key_ctx(&ctx->encrypt, &key2->keys[kds.out_key], kt, OPENVPN_OP_ENCRYPT, log_prefix);
 
     openvpn_snprintf(log_prefix, sizeof(log_prefix), "Incoming %s", name);
-    init_key_ctx(&ctx->decrypt, &key2->keys[kds.in_key], kt,
-                 OPENVPN_OP_DECRYPT, log_prefix);
+    init_key_ctx(&ctx->decrypt, &key2->keys[kds.in_key], kt, OPENVPN_OP_DECRYPT, log_prefix);
 
     ctx->initialized = true;
 }
@@ -1356,8 +1336,7 @@ read_key_file(struct key2 *key2, const char *file, const unsigned int flags)
                 }
                 else
                 {
-                    msg(M_FATAL,
-                        (isprint(c) ? printable_char_fmt : unprintable_char_fmt),
+                    msg(M_FATAL, (isprint(c) ? printable_char_fmt : unprintable_char_fmt),
                         c, line_num, error_filename, count, onekeylen, keylen);
                 }
             }
@@ -1403,12 +1382,7 @@ read_key_file(struct key2 *key2, const char *file, const unsigned int flags)
         for (i = 0; i < (int) SIZE(key2->keys); ++i)
         {
             /* format key as ascii */
-            const char *fmt = format_hex_ex((const uint8_t *)&key2->keys[i],
-                                            sizeof(key2->keys[i]),
-                                            0,
-                                            16,
-                                            "\n",
-                                            &gc);
+            const char *fmt = format_hex_ex((const uint8_t *)&key2->keys[i], sizeof(key2->keys[i]), 0, 16, "\n", &gc);
             printf("[%d]\n%s\n\n", i, fmt);
         }
     }
@@ -1583,8 +1557,7 @@ verify_fix_key2(struct key2 *key2, const struct key_type *kt, const char *shared
         /* This should be a very improbable failure */
         if (!check_key(&key2->keys[i], kt))
         {
-            msg(M_FATAL, "Key #%d in '%s' is bad.  Try making a new key with --genkey.",
-                i+1, shared_secret_file);
+            msg(M_FATAL, "Key #%d in '%s' is bad.  Try making a new key with --genkey.", i+1, shared_secret_file);
         }
     }
 }

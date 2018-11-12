@@ -2441,8 +2441,7 @@ options_postprocess_verify_ce(const struct options *options, const struct connec
     /*
      * SSL/TLS mode sanity checks.
      */
-    if (options->tls_server + options->tls_client
-        +(options->shared_secret_file != NULL) > 1)
+    if (options->tls_server + options->tls_client +(options->shared_secret_file != NULL) > 1)
     {
         msg(M_USAGE, "specify only one of --tls-server, --tls-client, or --secret");
     }
@@ -2461,12 +2460,8 @@ options_postprocess_verify_ce(const struct options *options, const struct connec
             "in the configuration file, which is the recommended approach.");
     }
 
-    const int tls_version_max =
-        (options->ssl_flags >> SSLF_TLS_VERSION_MAX_SHIFT)
-        & SSLF_TLS_VERSION_MAX_MASK;
-    const int tls_version_min =
-        (options->ssl_flags >> SSLF_TLS_VERSION_MIN_SHIFT)
-        & SSLF_TLS_VERSION_MIN_MASK;
+    const int tls_version_max = (options->ssl_flags >> SSLF_TLS_VERSION_MAX_SHIFT) & SSLF_TLS_VERSION_MAX_MASK;
+    const int tls_version_min = (options->ssl_flags >> SSLF_TLS_VERSION_MIN_SHIFT) & SSLF_TLS_VERSION_MIN_MASK;
 
     if (tls_version_max > 0 && tls_version_max < tls_version_min)
     {
@@ -3240,11 +3235,9 @@ options_postprocess_filechecks(struct options *options)
     if (!(options->management_flags & MF_EXTERNAL_KEY))
 #endif
     {
-        errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE,
-                                  options->priv_key_file, R_OK, "--key");
+        errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE, options->priv_key_file, R_OK, "--key");
     }
-    errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE,
-                              options->pkcs12_file, R_OK, "--pkcs12");
+    errs |= check_file_access(CHKACC_FILE|CHKACC_INLINE|CHKACC_PRIVATE, options->pkcs12_file, R_OK, "--pkcs12");
 
     if (options->ssl_flags & SSLF_CRL_VERIFY_DIR)
     {
@@ -5350,8 +5343,7 @@ add_option(struct options *options, char *p[], const char *file, int line, const
     {
         VERIFY_PERMISSION(OPT_P_GENERAL);
         options->resolve_in_advance = true;
-        /* Note the ip-remote-hint and the argument p[1] are for
-         * backward compatibility */
+        /* Note the ip-remote-hint and the argument p[1] are for backward compatibility */
         if (p[1])
         {
             options->ip_remote_hint = p[1];
@@ -5368,8 +5360,7 @@ add_option(struct options *options, char *p[], const char *file, int line, const
         if (options->ce.connect_retry_seconds > 0xFFFF)
         {
             options->ce.connect_retry_seconds = 0xFFFF;
-            msg(M_WARN, "connect retry wait interval truncated to %d",
-                options->ce.connect_retry_seconds);
+            msg(M_WARN, "connect retry wait interval truncated to %d", options->ce.connect_retry_seconds);
         }
 
         if (p[2])
@@ -7464,9 +7455,7 @@ add_option(struct options *options, char *p[], const char *file, int line, const
             if (!(MIN_SEQ_BACKTRACK <= replay_window && replay_window <= MAX_SEQ_BACKTRACK))
             {
                 msg(msglevel, "replay-window window size parameter (%d) must be between %d and %d",
-                    replay_window,
-                    MIN_SEQ_BACKTRACK,
-                    MAX_SEQ_BACKTRACK);
+                    replay_window, MIN_SEQ_BACKTRACK, MAX_SEQ_BACKTRACK);
                 goto err;
             }
             options->replay_window = replay_window;
@@ -7479,9 +7468,7 @@ add_option(struct options *options, char *p[], const char *file, int line, const
                 if (!(MIN_TIME_BACKTRACK <= replay_time && replay_time <= MAX_TIME_BACKTRACK))
                 {
                     msg(msglevel, "replay-window time window parameter (%d) must be between %d and %d",
-                        replay_time,
-                        MIN_TIME_BACKTRACK,
-                        MAX_TIME_BACKTRACK);
+                        replay_time, MIN_TIME_BACKTRACK, MAX_TIME_BACKTRACK);
                     goto err;
                 }
                 options->replay_time = replay_time;
@@ -7663,8 +7650,7 @@ add_option(struct options *options, char *p[], const char *file, int line, const
             msg(msglevel, "unknown tls-version-min parameter: %s", p[1]);
             goto err;
         }
-        options->ssl_flags &=
-            ~(SSLF_TLS_VERSION_MIN_MASK << SSLF_TLS_VERSION_MIN_SHIFT);
+        options->ssl_flags &= ~(SSLF_TLS_VERSION_MIN_MASK << SSLF_TLS_VERSION_MIN_SHIFT);
         options->ssl_flags |= (ver << SSLF_TLS_VERSION_MIN_SHIFT);
     }
     else if (streq(p[0], "tls-version-max") && p[1] && !p[2])
@@ -7677,8 +7663,7 @@ add_option(struct options *options, char *p[], const char *file, int line, const
             msg(msglevel, "unknown tls-version-max parameter: %s", p[1]);
             goto err;
         }
-        options->ssl_flags &=
-            ~(SSLF_TLS_VERSION_MAX_MASK << SSLF_TLS_VERSION_MAX_SHIFT);
+        options->ssl_flags &= ~(SSLF_TLS_VERSION_MAX_MASK << SSLF_TLS_VERSION_MAX_SHIFT);
         options->ssl_flags |= (ver << SSLF_TLS_VERSION_MAX_SHIFT);
     }
 #ifndef ENABLE_CRYPTO_MBEDTLS
@@ -7771,9 +7756,7 @@ add_option(struct options *options, char *p[], const char *file, int line, const
         {
             goto err;
         }
-        set_user_script(options, &options->tls_verify,
-                        string_substitute(p[1], ',', ' ', &options->gc),
-                        "tls-verify", true);
+        set_user_script(options, &options->tls_verify, string_substitute(p[1], ',', ' ', &options->gc), "tls-verify", true);
     }
 #ifndef ENABLE_CRYPTO_MBEDTLS
     else if (streq(p[0], "tls-export-cert") && p[1] && !p[2])

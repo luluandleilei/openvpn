@@ -251,12 +251,8 @@ streqnull(const char *a, const char *b)
  * otherwise. (like getaddrinfo)
  */
 static int
-get_cached_dns_entry(struct cached_dns_entry *dns_cache,
-                     const char *hostname,
-                     const char *servname,
-                     int ai_family,
-                     int resolve_flags,
-                     struct addrinfo **ai)
+get_cached_dns_entry(struct cached_dns_entry *dns_cache, const char *hostname,
+		const char *servname, int ai_family, int resolve_flags, struct addrinfo **ai)
 {
     struct cached_dns_entry *ph;
     int flags;
@@ -266,10 +262,8 @@ get_cached_dns_entry(struct cached_dns_entry *dns_cache,
 
     for (ph = dns_cache; ph; ph = ph->next)
     {
-        if (streqnull(ph->hostname, hostname)
-            && streqnull(ph->servname, servname)
-            && ph->ai_family == ai_family
-            && ph->flags == flags)
+        if (streqnull(ph->hostname, hostname) && streqnull(ph->servname, servname)
+            && ph->ai_family == ai_family && ph->flags == flags)
         {
             *ai = ph->ai;
             return 0;
@@ -280,29 +274,18 @@ get_cached_dns_entry(struct cached_dns_entry *dns_cache,
 
 
 static int
-do_preresolve_host(struct context *c,
-                   const char *hostname,
-                   const char *servname,
-                   const int af,
-                   const int flags)
+do_preresolve_host(struct context *c, const char *hostname, const char *servname, const int af, const int flags)
 {
     struct addrinfo *ai;
     int status;
 
-    if (get_cached_dns_entry(c->c1.dns_cache,
-                             hostname,
-                             servname,
-                             af,
-                             flags,
-                             &ai) == 0)
+    if (get_cached_dns_entry(c->c1.dns_cache, hostname, servname, af, flags, &ai) == 0)
     {
         /* entry already cached, return success */
         return 0;
     }
 
-    status = openvpn_getaddrinfo(flags, hostname, servname,
-                                 c->options.resolve_retry_seconds, NULL,
-                                 af, &ai);
+    status = openvpn_getaddrinfo(flags, hostname, servname, c->options.resolve_retry_seconds, NULL, af, &ai);
     if (status == 0)
     {
         struct cached_dns_entry *ph;
@@ -338,10 +321,7 @@ do_preresolve(struct context *c)
 {
     int i;
     struct connection_list *l = c->options.connection_list;
-    const unsigned int preresolve_flags = GETADDR_RESOLVE
-                                          |GETADDR_UPDATE_MANAGEMENT_STATE
-                                          |GETADDR_MENTION_RESOLVE_RETRY
-                                          |GETADDR_FATAL;
+    const unsigned int preresolve_flags = GETADDR_RESOLVE |GETADDR_UPDATE_MANAGEMENT_STATE |GETADDR_MENTION_RESOLVE_RETRY |GETADDR_FATAL;
 
 
     for (i = 0; i < l->len; ++i)
@@ -384,11 +364,7 @@ do_preresolve(struct context *c)
         /* Preresolve proxy */
         if (ce->http_proxy_options)
         {
-            status = do_preresolve_host(c,
-                                        ce->http_proxy_options->server,
-                                        ce->http_proxy_options->port,
-                                        ce->af,
-                                        preresolve_flags);
+            status = do_preresolve_host(c, ce->http_proxy_options->server, ce->http_proxy_options->port, ce->af, preresolve_flags);
 
             if (status != 0)
             {
@@ -398,11 +374,7 @@ do_preresolve(struct context *c)
 
         if (ce->socks_proxy_server)
         {
-            status = do_preresolve_host(c,
-                                        ce->socks_proxy_server,
-                                        ce->socks_proxy_port,
-                                        ce->af,
-                                        flags);
+            status = do_preresolve_host(c, ce->socks_proxy_server, ce->socks_proxy_port, ce->af, flags);
             if (status != 0)
             {
                 goto err;
@@ -433,13 +405,8 @@ err:
  * If resolve error, try again for resolve_retry_seconds seconds.
  */
 int
-openvpn_getaddrinfo(unsigned int flags,
-                    const char *hostname,
-                    const char *servname,
-                    int resolve_retry_seconds,
-                    volatile int *signal_received,
-                    int ai_family,
-                    struct addrinfo **res)
+openvpn_getaddrinfo(unsigned int flags, const char *hostname, const char *servname,
+		int resolve_retry_seconds, volatile int *signal_received, int ai_family, struct addrinfo **res)
 {
     struct addrinfo hints;
     int status;
@@ -468,8 +435,7 @@ openvpn_getaddrinfo(unsigned int flags,
         msglevel |= M_MSG_VIRT_OUT;
     }
 
-    if ((flags & (GETADDR_FATAL_ON_SIGNAL|GETADDR_WARN_ON_SIGNAL))
-        && !signal_received)
+    if ((flags & (GETADDR_FATAL_ON_SIGNAL|GETADDR_WARN_ON_SIGNAL)) && !signal_received)
     {
         signal_received = &sigrec;
     }
@@ -499,8 +465,7 @@ openvpn_getaddrinfo(unsigned int flags,
     {
         const int fail_wait_interval = 5; /* seconds */
         /* Add +4 to cause integer division rounding up (1 + 4) = 5, (0+4)/5=0 */
-        int resolve_retries = (flags & GETADDR_TRY_ONCE) ? 1 :
-                              ((resolve_retry_seconds + 4)/ fail_wait_interval);
+        int resolve_retries = (flags & GETADDR_TRY_ONCE) ? 1 : ((resolve_retry_seconds + 4)/ fail_wait_interval);
         const char *fmt;
         int level = 0;
 
@@ -519,16 +484,14 @@ openvpn_getaddrinfo(unsigned int flags,
         }
 
         fmt = "RESOLVE: Cannot resolve host address: %s:%s (%s)";
-        if ((flags & GETADDR_MENTION_RESOLVE_RETRY)
-            && !resolve_retry_seconds)
+        if ((flags & GETADDR_MENTION_RESOLVE_RETRY) && !resolve_retry_seconds)
         {
             fmt = "RESOLVE: Cannot resolve host address: %s:%s (%s) (I would have retried this name query if you had specified the --resolv-retry option.)";
         }
 
         if (!(flags & GETADDR_RESOLVE) || status == EAI_FAIL)
         {
-            msg(msglevel, "RESOLVE: Cannot parse IP address: %s:%s (%s)",
-                print_hostname,print_servname, gai_strerror(status));
+            msg(msglevel, "RESOLVE: Cannot parse IP address: %s:%s (%s)", print_hostname,print_servname, gai_strerror(status));
             goto done;
         }
 
@@ -537,13 +500,7 @@ openvpn_getaddrinfo(unsigned int flags,
         {
             if (management)
             {
-                management_set_state(management,
-                                     OPENVPN_STATE_RESOLVE,
-                                     NULL,
-                                     NULL,
-                                     NULL,
-                                     NULL,
-                                     NULL);
+                management_set_state(management, OPENVPN_STATE_RESOLVE, NULL, NULL, NULL, NULL, NULL);
             }
         }
 #endif
@@ -553,13 +510,11 @@ openvpn_getaddrinfo(unsigned int flags,
          */
         while (true)
         {
-#ifndef _WIN32
             res_init();
-#endif
+
             /* try hostname lookup */
             hints.ai_flags &= ~AI_NUMERICHOST;
-            dmsg(D_SOCKET_DEBUG, "GETADDRINFO flags=0x%04x ai_family=%d ai_socktype=%d",
-                 flags, hints.ai_family, hints.ai_socktype);
+            dmsg(D_SOCKET_DEBUG, "GETADDRINFO flags=0x%04x ai_family=%d ai_socktype=%d", flags, hints.ai_family, hints.ai_socktype);
             status = getaddrinfo(hostname, servname, &hints, res);
 
             if (signal_received)
@@ -594,19 +549,14 @@ openvpn_getaddrinfo(unsigned int flags,
                 break;
             }
 
-            /* resolve lookup failed, should we
-             * continue or fail? */
+            /* resolve lookup failed, should we continue or fail? */
             level = msglevel;
             if (resolve_retries > 0)
             {
                 level = D_RESOLVE_ERRORS;
             }
 
-            msg(level,
-                fmt,
-                print_hostname,
-                print_servname,
-                gai_strerror(status));
+            msg(level, fmt, print_hostname, print_servname, gai_strerror(status));
 
             if (--resolve_retries <= 0)
             {
