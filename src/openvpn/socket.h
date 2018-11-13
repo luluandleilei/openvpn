@@ -1011,26 +1011,9 @@ stream_buf_read_setup(struct link_socket *sock)
  * Socket Read Routines
  */
 
-int link_socket_read_tcp(struct link_socket *sock,
-                         struct buffer *buf);
+int link_socket_read_tcp(struct link_socket *sock, struct buffer *buf);
 
-#ifdef _WIN32
-
-static inline int
-link_socket_read_udp_win32(struct link_socket *sock,
-                           struct buffer *buf,
-                           struct link_socket_actual *from)
-{
-    return socket_finalize(sock->sd, &sock->reads, buf, from);
-}
-
-#else  /* ifdef _WIN32 */
-
-int link_socket_read_udp_posix(struct link_socket *sock,
-                               struct buffer *buf,
-                               struct link_socket_actual *from);
-
-#endif
+int link_socket_read_udp_posix(struct link_socket *sock, struct buffer *buf, struct link_socket_actual *from);
 
 /* read a TCP or UDP packet from link */
 static inline int
@@ -1060,73 +1043,30 @@ link_socket_read(struct link_socket *sock, struct buffer *buf, struct link_socke
  * Socket Write routines
  */
 
-int link_socket_write_tcp(struct link_socket *sock,
-                          struct buffer *buf,
-                          struct link_socket_actual *to);
+int link_socket_write_tcp(struct link_socket *sock, struct buffer *buf, struct link_socket_actual *to);
 
-#ifdef _WIN32
-
-static inline int
-link_socket_write_win32(struct link_socket *sock,
-                        struct buffer *buf,
-                        struct link_socket_actual *to)
-{
-    int err = 0;
-    int status = 0;
-    if (overlapped_io_active(&sock->writes))
-    {
-        status = socket_finalize(sock->sd, &sock->writes, NULL, NULL);
-        if (status < 0)
-        {
-            err = WSAGetLastError();
-        }
-    }
-    socket_send_queue(sock, buf, to);
-    if (status < 0)
-    {
-        WSASetLastError(err);
-        return status;
-    }
-    else
-    {
-        return BLEN(buf);
-    }
-}
-
-#else  /* ifdef _WIN32 */
-
-size_t link_socket_write_udp_posix_sendmsg(struct link_socket *sock,
-                                           struct buffer *buf,
-                                           struct link_socket_actual *to);
+size_t link_socket_write_udp_posix_sendmsg(struct link_socket *sock, struct buffer *buf, struct link_socket_actual *to);
 
 
 static inline size_t
-link_socket_write_udp_posix(struct link_socket *sock,
-                            struct buffer *buf,
-                            struct link_socket_actual *to)
+link_socket_write_udp_posix(struct link_socket *sock, struct buffer *buf, struct link_socket_actual *to)
 {
 #if ENABLE_IP_PKTINFO
-    if (proto_is_udp(sock->info.proto) && (sock->sockflags & SF_USE_IP_PKTINFO)
-        && addr_defined_ipi(to))
+    if (proto_is_udp(sock->info.proto) && (sock->sockflags & SF_USE_IP_PKTINFO) && addr_defined_ipi(to))
     {
         return link_socket_write_udp_posix_sendmsg(sock, buf, to);
     }
     else
 #endif
-    return sendto(sock->sd, BPTR(buf), BLEN(buf), 0,
-                  (struct sockaddr *) &to->dest.addr.sa,
-                  (socklen_t) af_addr_size(to->dest.addr.sa.sa_family));
+    return sendto(sock->sd, BPTR(buf), BLEN(buf), 0, (struct sockaddr *) &to->dest.addr.sa,
+    			(socklen_t) af_addr_size(to->dest.addr.sa.sa_family));
 }
 
 static inline size_t
-link_socket_write_tcp_posix(struct link_socket *sock,
-                            struct buffer *buf,
-                            struct link_socket_actual *to)
+link_socket_write_tcp_posix(struct link_socket *sock, struct buffer *buf, struct link_socket_actual *to)
 {
     return send(sock->sd, BPTR(buf), BLEN(buf), MSG_NOSIGNAL);
 }
-
-#endif /* ifdef _WIN32 */
 
 static inline size_t
 link_socket_write_udp(struct link_socket *sock,

@@ -525,8 +525,8 @@ struct tls_multi
                           *   user/pass authentications in this session.
                           */
     time_t auth_token_tstamp; /**< timestamp of the generated token */
-    bool auth_token_sent; /**< If server uses --auth-gen-token and
-                           *   token has been sent to client */
+	//If server uses --auth-gen-token and token has been sent to client 
+    bool auth_token_sent; 
     /*
      * Our session objects.
      */

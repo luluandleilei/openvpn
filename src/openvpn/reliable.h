@@ -82,7 +82,7 @@ struct reliable
     interval_t initial_timeout;	//sending timeout (after this time we send again until ACK) 
     packet_id_type packet_id;	//next sending packet id
     int offset;	//The size of reserved space at the beginning of the buffers to allow efficient header prepending.
-    bool hold; /* don't xmit until reliable_schedule_now is called */
+    bool hold; 	//don't xmit until reliable_schedule_now is called 
     struct reliable_entry array[RELIABLE_CAPACITY];
 };
 

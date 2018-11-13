@@ -53,11 +53,7 @@ alloc_buf_sock_tun(struct buffer *buf,
 }
 
 void
-frame_finalize(struct frame *frame,
-               bool link_mtu_defined,
-               int link_mtu,
-               bool tun_mtu_defined,
-               int tun_mtu)
+frame_finalize(struct frame *frame, bool link_mtu_defined, int link_mtu, bool tun_mtu_defined, int tun_mtu)
 {
     /* Set link_mtu based on command line options */
     if (tun_mtu_defined)
@@ -101,17 +97,10 @@ frame_set_mtu_dynamic(struct frame *frame, int mtu, unsigned int flags)
 
     if (!(flags & SET_MTU_UPPER_BOUND) || mtu < frame->link_mtu_dynamic)
     {
-        frame->link_mtu_dynamic = constrain_int(
-            mtu,
-            EXPANDED_SIZE_MIN(frame),
-            EXPANDED_SIZE(frame));
+        frame->link_mtu_dynamic = constrain_int(mtu, EXPANDED_SIZE_MIN(frame), EXPANDED_SIZE(frame));
     }
 
-    dmsg(D_MTU_DEBUG, "MTU DYNAMIC mtu=%d, flags=%u, %d -> %d",
-         orig_mtu,
-         flags,
-         orig_link_mtu_dynamic,
-         frame->link_mtu_dynamic);
+    dmsg(D_MTU_DEBUG, "MTU DYNAMIC mtu=%d, flags=%u, %d -> %d", orig_mtu, flags, orig_link_mtu_dynamic, frame->link_mtu_dynamic);
 }
 
 /*
@@ -136,9 +125,7 @@ frame_init_mssfix(struct frame *frame, const struct options *options)
 }
 
 void
-frame_print(const struct frame *frame,
-            int level,
-            const char *prefix)
+frame_print(const struct frame *frame, int level, const char *prefix)
 {
     struct gc_arena gc = gc_new();
     struct buffer out = alloc_buf_gc(256, &gc);

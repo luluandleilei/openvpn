@@ -857,11 +857,8 @@ socket_set_buffers(int fd, const struct socket_buffer_size *sbs)
             socket_set_rcvbuf(fd, sbs->rcvbuf);
         }
 
-        msg(D_OSBUF, "Socket Buffers: R=[%d->%d] S=[%d->%d]",
-            rcvbuf_old,
-            socket_get_rcvbuf(fd),
-            sndbuf_old,
-            socket_get_sndbuf(fd));
+        msg(D_OSBUF, "Socket Buffers: R=[%d->%d] S=[%d->%d]", rcvbuf_old, 
+        	socket_get_rcvbuf(fd), sndbuf_old, socket_get_sndbuf(fd));
     }
 }
 
@@ -959,8 +956,7 @@ create_socket_tcp(struct addrinfo *addrinfo)
     /* set SO_REUSEADDR on socket */
     {
         int on = 1;
-        if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR,
-                       (void *) &on, sizeof(on)) < 0)
+        if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (void *) &on, sizeof(on)) < 0)
         {
             msg(M_ERR, "TCP: Cannot setsockopt SO_REUSEADDR on TCP socket");
         }
@@ -993,14 +989,12 @@ create_socket_udp(struct addrinfo *addrinfo, const unsigned int flags)
         if (addrinfo->ai_family == AF_INET)
         {
 #if defined(HAVE_IN_PKTINFO) && defined(HAVE_IPI_SPEC_DST)
-            if (setsockopt(sd, SOL_IP, IP_PKTINFO,
-                           (void *)&pad, sizeof(pad)) < 0)
+            if (setsockopt(sd, SOL_IP, IP_PKTINFO, (void *)&pad, sizeof(pad)) < 0)
             {
                 msg(M_ERR, "UDP: failed setsockopt for IP_PKTINFO");
             }
 #elif defined(IP_RECVDSTADDR)
-            if (setsockopt(sd, IPPROTO_IP, IP_RECVDSTADDR,
-                           (void *)&pad, sizeof(pad)) < 0)
+            if (setsockopt(sd, IPPROTO_IP, IP_RECVDSTADDR, (void *)&pad, sizeof(pad)) < 0)
             {
                 msg(M_ERR, "UDP: failed setsockopt for IP_RECVDSTADDR");
             }
@@ -1011,19 +1005,16 @@ create_socket_udp(struct addrinfo *addrinfo, const unsigned int flags)
         else if (addrinfo->ai_family == AF_INET6)
         {
 #ifndef IPV6_RECVPKTINFO /* Some older Darwin platforms require this */
-            if (setsockopt(sd, IPPROTO_IPV6, IPV6_PKTINFO,
-                           (void *)&pad, sizeof(pad)) < 0)
+            if (setsockopt(sd, IPPROTO_IPV6, IPV6_PKTINFO, (void *)&pad, sizeof(pad)) < 0)
 #else
-            if (setsockopt(sd, IPPROTO_IPV6, IPV6_RECVPKTINFO,
-                           (void *)&pad, sizeof(pad)) < 0)
+            if (setsockopt(sd, IPPROTO_IPV6, IPV6_RECVPKTINFO, (void *)&pad, sizeof(pad)) < 0)
 #endif
             { msg(M_ERR, "UDP: failed setsockopt for IPV6_RECVPKTINFO");}
         }
     }
 #endif /* if ENABLE_IP_PKTINFO */
 
-    /* set socket file descriptor to not pass across execs, so that
-     * scripts don't have access to it */
+    /* set socket file descriptor to not pass across execs, so that scripts don't have access to it */
     set_cloexec(sd);
 
     return sd;
@@ -1341,8 +1332,7 @@ socket_bind(socket_descriptor_t sd, struct addrinfo *local, int ai_family, const
     }
     if (!cur)
     {
-        msg(M_FATAL, "%s: Socket bind failed: Addr to bind has no %s record",
-            prefix, addr_family_name(ai_family));
+        msg(M_FATAL, "%s: Socket bind failed: Addr to bind has no %s record", prefix, addr_family_name(ai_family));
     }
 
     if (ai_family == AF_INET6)

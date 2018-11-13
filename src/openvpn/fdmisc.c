@@ -57,12 +57,10 @@ set_nonblock_action(int fd)
 bool
 set_cloexec_action(int fd)
 {
-#ifndef _WIN32
     if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0)
     {
         return false;
     }
-#endif
     return true;
 }
 

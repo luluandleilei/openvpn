@@ -2313,8 +2313,7 @@ frame_finalize_options(struct context *c, const struct options *o)
     }
 
     /*
-     * Set adjustment factor for buffer alignment when no
-     * cipher is used.
+     * Set adjustment factor for buffer alignment when no cipher is used.
      */
     if (!CIPHER_ENABLED(c))
     {
@@ -2326,11 +2325,7 @@ frame_finalize_options(struct context *c, const struct options *o)
     }
 
     frame_add_to_extra_buffer(&c->c2.frame, PAYLOAD_ALIGN);
-    frame_finalize(&c->c2.frame,
-                   o->ce.link_mtu_defined,
-                   o->ce.link_mtu,
-                   o->ce.tun_mtu_defined,
-                   o->ce.tun_mtu);
+    frame_finalize(&c->c2.frame, o->ce.link_mtu_defined, o->ce.link_mtu, o->ce.tun_mtu_defined, o->ce.tun_mtu);
 }
 
 /*
@@ -2913,8 +2908,7 @@ do_init_frame(struct context *c)
      */
     if (c->options.ce.fragment && c->options.mtu_test)
     {
-        msg(M_WARN,
-            "WARNING: using --fragment and --mtu-test together may produce an inaccurate MTU test result");
+        msg(M_WARN, "WARNING: using --fragment and --mtu-test together may produce an inaccurate MTU test result");
     }
 #endif
 

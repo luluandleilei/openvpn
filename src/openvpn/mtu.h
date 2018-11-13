@@ -91,11 +91,9 @@
  * Packet geometry parameters.
  */
 struct frame {
-    int link_mtu;               /**< Maximum packet size to be sent over
-                                 *   the external network interface. */
+    int link_mtu;               /* Maximum packet size to be sent over the external network interface. */
 
-    int link_mtu_dynamic;       /**< Dynamic MTU value for the external
-                                 *   network interface. */
+    int link_mtu_dynamic;       /* Dynamic MTU value for the external network interface. */
 
     int extra_frame;            /**< Maximum number of bytes that all
                                  *   processing steps together could add.
@@ -104,9 +102,7 @@ struct frame {
                                  *   @endcode
                                  */
 
-    int extra_buffer;           /**< Maximum number of bytes that
-                                 *   processing steps could expand the
-                                 *   internal work buffer.
+    int extra_buffer;           /**< Maximum number of bytes that processing steps could expand the internal work buffer.
                                  *
                                  *   This is used by the \link compression
                                  *   Data Channel Compression

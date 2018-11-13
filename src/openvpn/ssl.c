@@ -322,8 +322,7 @@ tls_adjust_frame_parameters(struct frame *frame)
  * to control channel packet.
  */
 static void
-tls_init_control_channel_frame_parameters(const struct frame *data_channel_frame,
-                                          struct frame *frame)
+tls_init_control_channel_frame_parameters(const struct frame *data_channel_frame, struct frame *frame)
 {
     /*
      * frame->extra_frame is already initialized with tls_auth buffer requirements,
@@ -887,8 +886,7 @@ key_state_init(struct tls_session *session, struct key_state *ks)
     CLEAR(*ks);
 
     /*
-     * Build TLS object that reads/writes ciphertext
-     * to/from memory BIOs.
+     * Build TLS object that reads/writes ciphertext to/from memory BIOs.
      */
     key_state_ssl_init(&ks->ks_ssl, &session->opt->ssl_ctx, session->opt->server, session);
 
@@ -921,20 +919,14 @@ key_state_init(struct tls_session *session, struct key_state *ks)
     ks->plaintext_read_buf = alloc_buf(TLS_CHANNEL_BUF_SIZE);
     ks->plaintext_write_buf = alloc_buf(TLS_CHANNEL_BUF_SIZE);
     ks->ack_write_buf = alloc_buf(BUF_SIZE(&session->opt->frame));
-    reliable_init(ks->send_reliable, BUF_SIZE(&session->opt->frame),
-                  FRAME_HEADROOM(&session->opt->frame), TLS_RELIABLE_N_SEND_BUFFERS,
-                  ks->key_id ? false : session->opt->xmit_hold);
-    reliable_init(ks->rec_reliable, BUF_SIZE(&session->opt->frame),
-                  FRAME_HEADROOM(&session->opt->frame), TLS_RELIABLE_N_REC_BUFFERS,
-                  false);
+    reliable_init(ks->send_reliable, BUF_SIZE(&session->opt->frame), FRAME_HEADROOM(&session->opt->frame), TLS_RELIABLE_N_SEND_BUFFERS, ks->key_id ? false : session->opt->xmit_hold);
+    reliable_init(ks->rec_reliable, BUF_SIZE(&session->opt->frame), FRAME_HEADROOM(&session->opt->frame), TLS_RELIABLE_N_REC_BUFFERS, false);
     reliable_set_timeout(ks->send_reliable, session->opt->packet_timeout);
 
     /* init packet ID tracker */
     if (session->opt->replay)
     {
-        packet_id_init(&ks->crypto_options.packet_id,
-                       session->opt->replay_window, session->opt->replay_time, "SSL",
-                       ks->key_id);
+        packet_id_init(&ks->crypto_options.packet_id, session->opt->replay_window, session->opt->replay_time, "SSL", ks->key_id);
     }
 
     ks->crypto_options.pid_persist = NULL;
@@ -1081,16 +1073,14 @@ tls_session_init(struct tls_multi *multi, struct tls_session *session)
     session->tls_wrap.work = alloc_buf(BUF_SIZE(&session->opt->frame));
 
     /* initialize packet ID replay window for --tls-auth */
-    packet_id_init(&session->tls_wrap.opt.packet_id, session->opt->replay_window, 
-    	session->opt->replay_time, "TLS_WRAP", session->key_id);
+    packet_id_init(&session->tls_wrap.opt.packet_id, session->opt->replay_window, session->opt->replay_time, "TLS_WRAP", session->key_id);
 
     /* load most recent packet-id to replay protect on --tls-auth */
     packet_id_persist_load_obj(session->tls_wrap.opt.pid_persist, &session->tls_wrap.opt.packet_id);
 
     key_state_init(session, &session->key[KS_PRIMARY]);
 
-    dmsg(D_TLS_DEBUG, "TLS: tls_session_init: new session object, sid=%s",
-         session_id_print(&session->session_id, &gc));
+    dmsg(D_TLS_DEBUG, "TLS: tls_session_init: new session object, sid=%s", session_id_print(&session->session_id, &gc));
 
     gc_free(&gc);
 }
@@ -1960,10 +1950,8 @@ tls_session_update_crypto_params(struct tls_session *session, struct options *op
 
     /* Update frame parameters: undo worst-case overhead, add actual overhead */
     frame_remove_from_extra_frame(frame, crypto_max_overhead());
-    crypto_adjust_frame_parameters(frame, &session->opt->key_type,
-                                   options->replay, packet_id_long_form);
-    frame_finalize(frame, options->ce.link_mtu_defined, options->ce.link_mtu,
-                   options->ce.tun_mtu_defined, options->ce.tun_mtu);
+    crypto_adjust_frame_parameters(frame, &session->opt->key_type, options->replay, packet_id_long_form);
+    frame_finalize(frame, options->ce.link_mtu_defined, options->ce.link_mtu, options->ce.tun_mtu_defined, options->ce.tun_mtu);
     frame_init_mssfix(frame, options);
     frame_print(frame, D_MTU_INFO, "Data Channel MTU parms");
 
@@ -3966,8 +3954,7 @@ tls_send_payload(struct tls_multi *multi,
 }
 
 bool
-tls_rec_payload(struct tls_multi *multi,
-                struct buffer *buf)
+tls_rec_payload(struct tls_multi *multi, struct buffer *buf)
 {
     struct tls_session *session;
     struct key_state *ks;

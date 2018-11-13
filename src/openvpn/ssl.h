@@ -187,8 +187,7 @@ void tls_multi_init_finalize(struct tls_multi *multi, const struct frame *frame)
 /*
  * Initialize a standalone tls-auth verification object.
  */
-struct tls_auth_standalone *tls_auth_standalone_init(struct tls_options *tls_options,
-                                                     struct gc_arena *gc);
+struct tls_auth_standalone *tls_auth_standalone_init(struct tls_options *tls_options, struct gc_arena *gc);
 
 /*
  * Finalize a standalone tls-auth verification object.

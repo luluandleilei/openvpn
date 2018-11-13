@@ -77,9 +77,7 @@ packet_id_debug(int msglevel,
 void
 packet_id_init(struct packet_id *p, int seq_backtrack, int time_backtrack, const char *name, int unit)
 {
-    dmsg(D_PID_DEBUG, "PID packet_id_init seq_backtrack=%d time_backtrack=%d",
-         seq_backtrack,
-         time_backtrack);
+    dmsg(D_PID_DEBUG, "PID packet_id_init seq_backtrack=%d time_backtrack=%d", seq_backtrack, time_backtrack);
 
     ASSERT(p);
     CLEAR(*p);

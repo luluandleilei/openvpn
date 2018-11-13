@@ -220,16 +220,13 @@ struct crypto_options
     struct key_ctx_bi key_ctx_bi; /* OpenSSL cipher and HMAC contexts for both sending and receiving directions. */
     struct packet_id packet_id; /* Current packet ID state for both sending and receiving directions. */
     struct packet_id_persist *pid_persist; /* Persistent packet ID state for keeping state between successive OpenVPN process startups. */
-   
+   //Bit-flag indicating whether to use OpenVPN's long packet ID format. 
 #define CO_PACKET_ID_LONG_FORM  (1<<0)
-    /* Bit-flag indicating whether to use OpenVPN's long packet ID format. */
+	//Bit-flag indicating whether to ignore the packet ID of a received packet. 
+    //This flag is used during processing of the first packet received from a client.
 #define CO_IGNORE_PACKET_ID     (1<<1)
-    /**< Bit-flag indicating whether to ignore
-     *   the packet ID of a received packet.
-     *   This flag is used during processing
-     *   of the first packet received from a
-     *   client. */
-#define CO_MUTE_REPLAY_WARNINGS (1<<2) /* Bit-flag indicating not to display replay warnings. */
+	//Bit-flag indicating not to display replay warnings. 
+#define CO_MUTE_REPLAY_WARNINGS (1<<2) 
     unsigned int flags;         /* Bit-flags determining behavior of security operation functions. */
 };
 
