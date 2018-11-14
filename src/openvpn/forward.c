@@ -320,7 +320,7 @@ check_tls_dowork(struct context *c)
 
     if (interval_test(&c->c2.tmp_int))
     {
-        const int tmp_status = tls_multi_process (c->c2.tls_multi, &c->c2.to_link, &c->c2.to_link_addr, get_link_socket_info(c), &wakeup);
+        const int tmp_status = tls_multi_process(c->c2.tls_multi, &c->c2.to_link, &c->c2.to_link_addr, get_link_socket_info(c), &wakeup);
         if (tmp_status == TLSMP_ACTIVE)
         {
             update_time();
@@ -526,10 +526,6 @@ check_add_routes_dowork(struct context *c)
             {
                 register_signal(c, SIGHUP, "ip-fail");
                 c->persist.restart_sleep_seconds = 10;
-#ifdef _WIN32
-                show_routes(M_INFO|M_NOPREFIX);
-                show_adapters(M_INFO|M_NOPREFIX);
-#endif
             }
         }
         update_time();
@@ -622,8 +618,7 @@ check_fragment_dowork(struct context *c)
     /* OS MTU Hint? */
     if (lsi->mtu_changed)
     {
-        frame_adjust_path_mtu(&c->c2.frame_fragment, c->c2.link_socket->mtu,
-                              c->options.ce.proto);
+        frame_adjust_path_mtu(&c->c2.frame_fragment, c->c2.link_socket->mtu, c->options.ce.proto);
         lsi->mtu_changed = false;
     }
 

@@ -161,22 +161,18 @@ set_mtu_discover_type(int sd, int mtu_type, sa_family_t proto_af)
         {
 #if defined(HAVE_SETSOCKOPT) && defined(IP_MTU_DISCOVER)
             case AF_INET:
-                if (setsockopt
-                        (sd, IPPROTO_IP, IP_MTU_DISCOVER, &mtu_type, sizeof(mtu_type)))
+                if (setsockopt(sd, IPPROTO_IP, IP_MTU_DISCOVER, &mtu_type, sizeof(mtu_type)))
                 {
-                    msg(M_ERR, "Error setting IP_MTU_DISCOVER type=%d on TCP/UDP socket",
-                        mtu_type);
+                    msg(M_ERR, "Error setting IP_MTU_DISCOVER type=%d on TCP/UDP socket", mtu_type);
                 }
                 break;
 
 #endif
 #if defined(HAVE_SETSOCKOPT) && defined(IPV6_MTU_DISCOVER)
             case AF_INET6:
-                if (setsockopt
-                        (sd, IPPROTO_IPV6, IPV6_MTU_DISCOVER, &mtu_type, sizeof(mtu_type)))
+                if (setsockopt(sd, IPPROTO_IPV6, IPV6_MTU_DISCOVER, &mtu_type, sizeof(mtu_type)))
                 {
-                    msg(M_ERR, "Error setting IPV6_MTU_DISCOVER type=%d on TCP6/UDP6 socket",
-                        mtu_type);
+                    msg(M_ERR, "Error setting IPV6_MTU_DISCOVER type=%d on TCP6/UDP6 socket", mtu_type);
                 }
                 break;
 
@@ -204,9 +200,7 @@ translate_mtu_discover_type_name(const char *name)
     {
         return IP_PMTUDISC_DONT;
     }
-    msg(M_FATAL,
-        "invalid --mtu-disc type: '%s' -- valid types are 'yes', 'maybe', or 'no'",
-        name);
+    msg(M_FATAL, "invalid --mtu-disc type: '%s' -- valid types are 'yes', 'maybe', or 'no'", name);
 #else  /* if defined(IP_PMTUDISC_DONT) && defined(IP_PMTUDISC_WANT) && defined(IP_PMTUDISC_DO) */
     msg(M_FATAL, MTUDISC_NOT_SUPPORTED_MSG);
 #endif
@@ -325,8 +319,7 @@ set_sock_extended_error_passing(int sd)
     int on = 1;
     if (setsockopt(sd, SOL_IP, IP_RECVERR, (void *) &on, sizeof(on)))
     {
-        msg(M_WARN | M_ERRNO,
-            "Note: enable extended error passing on TCP/UDP socket failed (IP_RECVERR)");
+        msg(M_WARN | M_ERRNO, "Note: enable extended error passing on TCP/UDP socket failed (IP_RECVERR)");
     }
 }
 

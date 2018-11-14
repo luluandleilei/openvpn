@@ -135,9 +135,9 @@ interval_action(struct interval *top)
 
 struct event_timeout
 {
-    bool defined;
-    interval_t n;
-    time_t last; /* time of last event */
+    bool defined;	
+    interval_t n;	//interval of event
+    time_t last; 	//time of last event 
 };
 
 static inline bool
@@ -212,9 +212,7 @@ event_timeout_remaining(struct event_timeout *et)
 
 #define ETT_DEFAULT (-1)
 
-bool event_timeout_trigger(struct event_timeout *et,
-                           struct timeval *tv,
-                           const int et_const_retry);
+bool event_timeout_trigger(struct event_timeout *et, struct timeval *tv, const int et_const_retry);
 
 /*
  * Measure time intervals in microseconds

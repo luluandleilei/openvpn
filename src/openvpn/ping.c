@@ -57,15 +57,13 @@ check_ping_restart_dowork(struct context *c)
     switch (c->options.ping_rec_timeout_action)
     {
         case PING_EXIT:
-            msg(M_INFO, "%sInactivity timeout (--ping-exit), exiting",
-                format_common_name(c, &gc));
+            msg(M_INFO, "%sInactivity timeout (--ping-exit), exiting", format_common_name(c, &gc));
             c->sig->signal_received = SIGTERM;
             c->sig->signal_text = "ping-exit";
             break;
 
         case PING_RESTART:
-            msg(M_INFO, "%sInactivity timeout (--ping-restart), restarting",
-                format_common_name(c, &gc));
+            msg(M_INFO, "%sInactivity timeout (--ping-restart), restarting", format_common_name(c, &gc));
             c->sig->signal_received = SIGUSR1; /* SOFT-SIGUSR1 -- Ping Restart */
             c->sig->signal_text = "ping-restart";
             break;

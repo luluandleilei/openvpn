@@ -59,8 +59,7 @@ const int proto_overhead[] = { /* indexed by PROTO_x */
  * Convert sockflags/getaddr_flags into getaddr_flags
  */
 static unsigned int
-sf2gaf(const unsigned int getaddr_flags,
-       const unsigned int sockflags)
+sf2gaf(const unsigned int getaddr_flags, const unsigned int sockflags)
 {
     if (sockflags & SF_HOST_RANDOMIZE)
     {
@@ -1098,17 +1097,13 @@ protect_fd_nonlocal(int fd, const struct sockaddr *addr)
  * Functions used for establishing a TCP stream connection.
  */
 static void
-socket_do_listen(socket_descriptor_t sd,
-                 const struct addrinfo *local,
-                 bool do_listen,
-                 bool do_set_nonblock)
+socket_do_listen(socket_descriptor_t sd, const struct addrinfo *local, bool do_listen, bool do_set_nonblock)
 {
     struct gc_arena gc = gc_new();
     if (do_listen)
     {
         ASSERT(local);
-        msg(M_INFO, "Listening for incoming TCP connection on %s",
-            print_sockaddr(local->ai_addr, &gc));
+        msg(M_INFO, "Listening for incoming TCP connection on %s", print_sockaddr(local->ai_addr, &gc));
         if (listen(sd, 1))
         {
             msg(M_ERR, "TCP: listen() failed");
@@ -1125,9 +1120,7 @@ socket_do_listen(socket_descriptor_t sd,
 }
 
 socket_descriptor_t
-socket_do_accept(socket_descriptor_t sd,
-                 struct link_socket_actual *act,
-                 const bool nowait)
+socket_do_accept(socket_descriptor_t sd, struct link_socket_actual *act, const bool nowait)
 {
     /* af_addr_size WILL return 0 in this case if AFs other than AF_INET
      * are compiled because act is empty here.
@@ -1199,19 +1192,13 @@ static void
 tcp_connection_established(const struct link_socket_actual *act)
 {
     struct gc_arena gc = gc_new();
-    msg(M_INFO, "TCP connection established with %s",
-        print_link_socket_actual(act, &gc));
+    msg(M_INFO, "TCP connection established with %s", print_link_socket_actual(act, &gc));
     gc_free(&gc);
 }
 
 static socket_descriptor_t
-socket_listen_accept(socket_descriptor_t sd,
-                     struct link_socket_actual *act,
-                     const char *remote_dynamic,
-                     const struct addrinfo *local,
-                     bool do_listen,
-                     bool nowait,
-                     volatile int *signal_received)
+socket_listen_accept(socket_descriptor_t sd, struct link_socket_actual *act, const char *remote_dynamic, 
+		const struct addrinfo *local, bool do_listen, bool nowait, volatile int *signal_received)
 {
     struct gc_arena gc = gc_new();
     /* struct openvpn_sockaddr *remote = &act->dest; */
@@ -1259,15 +1246,12 @@ socket_listen_accept(socket_descriptor_t sd,
             struct addrinfo *ai = NULL;
             if (remote_dynamic)
             {
-                openvpn_getaddrinfo(0, remote_dynamic, NULL, 1, NULL,
-                                    remote_verify.addr.sa.sa_family, &ai);
+                openvpn_getaddrinfo(0, remote_dynamic, NULL, 1, NULL, remote_verify.addr.sa.sa_family, &ai);
             }
 
             if (ai && !addrlist_match(&remote_verify, ai))
             {
-                msg(M_WARN,
-                    "TCP NOTE: Rejected connection attempt from %s due to --remote setting",
-                    print_link_socket_actual(act, &gc));
+                msg(M_WARN, "TCP NOTE: Rejected connection attempt from %s due to --remote setting", print_link_socket_actual(act, &gc));
                 if (openvpn_close_socket(new_sd))
                 {
                     msg(M_ERR, "TCP: close socket failed (new_sd)");
@@ -1297,14 +1281,6 @@ socket_listen_accept(socket_descriptor_t sd,
     return new_sd;
 }
 
-/* older mingw versions and WinXP do not have this define,
- * but Vista and up support the functionality - just define it here
- */
-#ifdef _WIN32
-#ifndef IPV6_V6ONLY
-#define IPV6_V6ONLY 27
-#endif
-#endif
 void
 socket_bind(socket_descriptor_t sd, struct addrinfo *local, int ai_family, const char *prefix, bool ipv6only)
 {
@@ -1354,16 +1330,9 @@ socket_bind(socket_descriptor_t sd, struct addrinfo *local, int ai_family, const
 }
 
 int
-openvpn_connect(socket_descriptor_t sd,
-                const struct sockaddr *remote,
-                int connect_timeout,
-                volatile int *signal_received)
+openvpn_connect(socket_descriptor_t sd, const struct sockaddr *remote, int connect_timeout, volatile int *signal_received)
 {
     int status = 0;
-
-#ifdef TARGET_ANDROID
-    protect_fd_nonlocal(sd, remote);
-#endif
 
 #ifdef CONNECT_NONBLOCK
     set_nonblock(sd);
@@ -1372,13 +1341,7 @@ openvpn_connect(socket_descriptor_t sd,
     {
         status = openvpn_errno();
     }
-    if (
-#ifdef _WIN32
-        status == WSAEWOULDBLOCK
-#else
-        status == EINPROGRESS
-#endif
-        )
+    if (status == EINPROGRESS)
     {
         while (true)
         {
@@ -1416,11 +1379,7 @@ openvpn_connect(socket_descriptor_t sd,
             {
                 if (--connect_timeout < 0)
                 {
-#ifdef _WIN32
-                    status = WSAETIMEDOUT;
-#else
                     status = ETIMEDOUT;
-#endif
                     break;
                 }
                 management_sleep(1);
@@ -1433,8 +1392,7 @@ openvpn_connect(socket_descriptor_t sd,
                 socklen_t len;
 
                 len = sizeof(val);
-                if (getsockopt(sd, SOL_SOCKET, SO_ERROR, (void *) &val, &len) == 0
-                    && len == sizeof(val))
+                if (getsockopt(sd, SOL_SOCKET, SO_ERROR, (void *) &val, &len) == 0 && len == sizeof(val))
                 {
                     status = val;
                 }
@@ -1465,13 +1423,11 @@ set_actual_address(struct link_socket_actual *actual, struct addrinfo *ai)
 
     if (ai->ai_family == AF_INET)
     {
-        actual->dest.addr.in4 =
-            *((struct sockaddr_in *) ai->ai_addr);
+        actual->dest.addr.in4 = *((struct sockaddr_in *) ai->ai_addr);
     }
     else if (ai->ai_family == AF_INET6)
     {
-        actual->dest.addr.in6 =
-            *((struct sockaddr_in6 *) ai->ai_addr);
+        actual->dest.addr.in6 = *((struct sockaddr_in6 *) ai->ai_addr);
     }
     else
     {
@@ -1481,32 +1437,21 @@ set_actual_address(struct link_socket_actual *actual, struct addrinfo *ai)
 }
 
 static void
-socket_connect(socket_descriptor_t *sd,
-               const struct sockaddr *dest,
-               const int connect_timeout,
-               struct signal_info *sig_info)
+socket_connect(socket_descriptor_t *sd, const struct sockaddr *dest, const int connect_timeout, struct signal_info *sig_info)
 {
     struct gc_arena gc = gc_new();
     int status;
 
 #ifdef CONNECT_NONBLOCK
-    msg(M_INFO, "Attempting to establish TCP connection with %s [nonblock]",
-        print_sockaddr(dest, &gc));
+    msg(M_INFO, "Attempting to establish TCP connection with %s [nonblock]", print_sockaddr(dest, &gc));
 #else
-    msg(M_INFO, "Attempting to establish TCP connection with %s",
-        print_sockaddr(dest, &gc));
+    msg(M_INFO, "Attempting to establish TCP connection with %s", print_sockaddr(dest, &gc));
 #endif
 
 #ifdef ENABLE_MANAGEMENT
     if (management)
     {
-        management_set_state(management,
-                             OPENVPN_STATE_TCP_CONNECT,
-                             NULL,
-                             NULL,
-                             NULL,
-                             NULL,
-                             NULL);
+        management_set_state(management, OPENVPN_STATE_TCP_CONNECT, NULL, NULL, NULL, NULL, NULL);
     }
 #endif
 
@@ -1521,9 +1466,7 @@ socket_connect(socket_descriptor_t *sd,
 
     if (status)
     {
-
-        msg(D_LINK_ERRORS, "TCP: connect to %s failed: %s",
-            print_sockaddr(dest, &gc), strerror(status));
+        msg(D_LINK_ERRORS, "TCP: connect to %s failed: %s", print_sockaddr(dest, &gc), strerror(status));
 
         openvpn_close_socket(*sd);
         *sd = SOCKET_UNDEFINED;
@@ -1562,31 +1505,11 @@ stream_buf_added(struct stream_buf *sb, int length_added);
 static void
 socket_frame_init(const struct frame *frame, struct link_socket *sock)
 {
-#ifdef _WIN32
-    overlapped_io_init(&sock->reads, frame, FALSE, false);
-    overlapped_io_init(&sock->writes, frame, TRUE, false);
-    sock->rw_handle.read = sock->reads.overlapped.hEvent;
-    sock->rw_handle.write = sock->writes.overlapped.hEvent;
-#endif
-
     if (link_socket_connection_oriented(sock))
     {
-#ifdef _WIN32
-        stream_buf_init(&sock->stream_buf,
-                        &sock->reads.buf_init,
-                        sock->sockflags,
-                        sock->info.proto);
-#else
-        alloc_buf_sock_tun(&sock->stream_buf_data,
-                           frame,
-                           false,
-                           FRAME_HEADROOM_MARKER_READ_STREAM);
+        alloc_buf_sock_tun(&sock->stream_buf_data, frame, false, FRAME_HEADROOM_MARKER_READ_STREAM);
 
-        stream_buf_init(&sock->stream_buf,
-                        &sock->stream_buf_data,
-                        sock->sockflags,
-                        sock->info.proto);
-#endif
+        stream_buf_init(&sock->stream_buf, &sock->stream_buf_data, sock->sockflags, sock->info.proto);
     }
 }
 
@@ -1608,8 +1531,7 @@ resolve_bind_local(struct link_socket *sock, const sa_family_t af)
     /* resolve local address if undefined */
     if (!sock->info.lsa->bind_local)
     {
-        int flags = GETADDR_RESOLVE | GETADDR_WARN_ON_SIGNAL
-                    |GETADDR_FATAL | GETADDR_PASSIVE;
+        int flags = GETADDR_RESOLVE | GETADDR_WARN_ON_SIGNAL |GETADDR_FATAL | GETADDR_PASSIVE;
         int status;
 
         if (proto_is_dgram(sock->info.proto))
@@ -1618,24 +1540,16 @@ resolve_bind_local(struct link_socket *sock, const sa_family_t af)
         }
 
         /* will return AF_{INET|INET6}from local_host */
-        status = get_cached_dns_entry(sock->dns_cache,
-                                      sock->local_host,
-                                      sock->local_port,
-                                      af,
-                                      flags,
-                                      &sock->info.lsa->bind_local);
+        status = get_cached_dns_entry(sock->dns_cache, sock->local_host, sock->local_port, af, flags, &sock->info.lsa->bind_local);
 
         if (status)
         {
-            status = openvpn_getaddrinfo(flags, sock->local_host, sock->local_port, 0,
-                                         NULL, af, &sock->info.lsa->bind_local);
+            status = openvpn_getaddrinfo(flags, sock->local_host, sock->local_port, 0, NULL, af, &sock->info.lsa->bind_local);
         }
 
         if (status !=0)
         {
-            msg(M_FATAL, "getaddrinfo() failed for local \"%s:%s\": %s",
-                sock->local_host, sock->local_port,
-                gai_strerror(status));
+            msg(M_FATAL, "getaddrinfo() failed for local \"%s:%s\": %s", sock->local_host, sock->local_port, gai_strerror(status));
         }
     }
 
@@ -1643,10 +1557,7 @@ resolve_bind_local(struct link_socket *sock, const sa_family_t af)
 }
 
 static void
-resolve_remote(struct link_socket *sock,
-               int phase,
-               const char **remote_dynamic,
-               volatile int *signal_received)
+resolve_remote(struct link_socket *sock, int phase, const char **remote_dynamic, volatile int *signal_received)
 {
     struct gc_arena gc = gc_new();
 
@@ -1702,15 +1613,10 @@ resolve_remote(struct link_socket *sock,
             }
 
 
-            status = get_cached_dns_entry(sock->dns_cache,
-                                          sock->remote_host,
-                                          sock->remote_port,
-                                          sock->info.af,
-                                          flags, &ai);
+            status = get_cached_dns_entry(sock->dns_cache, sock->remote_host, sock->remote_port, sock->info.af, flags, &ai);
             if (status)
             {
-                status = openvpn_getaddrinfo(flags, sock->remote_host, sock->remote_port,
-                                             retry, signal_received, sock->info.af, &ai);
+                status = openvpn_getaddrinfo(flags, sock->remote_host, sock->remote_port, retry, signal_received, sock->info.af, &ai);
             }
 
             if (status == 0)
@@ -1719,11 +1625,7 @@ resolve_remote(struct link_socket *sock,
                 sock->info.lsa->current_remote = ai;
 
                 dmsg(D_SOCKET_DEBUG, "RESOLVE_REMOTE flags=0x%04x phase=%d rrs=%d sig=%d status=%d",
-                     flags,
-                     phase,
-                     retry,
-                     signal_received ? *signal_received : -1,
-                     status);
+                     flags, phase, retry, signal_received ? *signal_received : -1, status);
             }
             if (signal_received)
             {
@@ -1746,8 +1648,7 @@ resolve_remote(struct link_socket *sock,
     /* should we re-use previous active remote address? */
     if (link_socket_actual_defined(&sock->info.lsa->actual))
     {
-        msg(M_INFO, "TCP/UDP: Preserving recently used remote address: %s",
-            print_link_socket_actual(&sock->info.lsa->actual, &gc));
+        msg(M_INFO, "TCP/UDP: Preserving recently used remote address: %s", print_link_socket_actual(&sock->info.lsa->actual, &gc));
         if (remote_dynamic)
         {
             *remote_dynamic = NULL;
@@ -1758,8 +1659,7 @@ resolve_remote(struct link_socket *sock,
         CLEAR(sock->info.lsa->actual);
         if (sock->info.lsa->current_remote)
         {
-            set_actual_address(&sock->info.lsa->actual,
-                               sock->info.lsa->current_remote);
+            set_actual_address(&sock->info.lsa->actual, sock->info.lsa->current_remote);
         }
     }
 
@@ -2015,47 +1915,30 @@ linksock_print_addr(struct link_socket *sock)
     }
     else
     {
-        msg(msglevel, "%s link local: (not bound)",
-            proto2ascii(sock->info.proto, sock->info.af, true));
+        msg(msglevel, "%s link local: (not bound)", proto2ascii(sock->info.proto, sock->info.af, true));
     }
 
     /* print active remote address */
-    msg(msglevel, "%s link remote: %s",
-        proto2ascii(sock->info.proto, sock->info.af, true),
-        print_link_socket_actual_ex(&sock->info.lsa->actual,
-                                    ":",
-                                    PS_SHOW_PORT_IF_DEFINED,
-                                    &gc));
+    msg(msglevel, "%s link remote: %s", proto2ascii(sock->info.proto, sock->info.af, true), 
+    	print_link_socket_actual_ex(&sock->info.lsa->actual, ":", PS_SHOW_PORT_IF_DEFINED, &gc));
     gc_free(&gc);
 }
 
 static void
-phase2_tcp_server(struct link_socket *sock, const char *remote_dynamic,
-                  volatile int *signal_received)
+phase2_tcp_server(struct link_socket *sock, const char *remote_dynamic, volatile int *signal_received)
 {
     switch (sock->mode)
     {
         case LS_MODE_DEFAULT:
-            sock->sd = socket_listen_accept(sock->sd,
-                                            &sock->info.lsa->actual,
-                                            remote_dynamic,
-                                            sock->info.lsa->bind_local,
-                                            true,
-                                            false,
-                                            signal_received);
+            sock->sd = socket_listen_accept(sock->sd, &sock->info.lsa->actual, remote_dynamic, sock->info.lsa->bind_local, true, false, signal_received);
             break;
 
         case LS_MODE_TCP_LISTEN:
-            socket_do_listen(sock->sd,
-                             sock->info.lsa->bind_local,
-                             true,
-                             false);
+            socket_do_listen(sock->sd, sock->info.lsa->bind_local, true, false);
             break;
 
         case LS_MODE_TCP_ACCEPT_FROM:
-            sock->sd = socket_do_accept(sock->sd,
-                                        &sock->info.lsa->actual,
-                                        false);
+            sock->sd = socket_do_accept(sock->sd, &sock->info.lsa->actual, false);
             if (!socket_defined(sock->sd))
             {
                 *signal_received = SIGTERM;
@@ -2076,10 +1959,7 @@ phase2_tcp_client(struct link_socket *sock, struct signal_info *sig_info)
     bool proxy_retry = false;
     do
     {
-        socket_connect(&sock->sd,
-                       sock->info.lsa->current_remote->ai_addr,
-                       get_server_poll_remaining_time(sock->server_poll_timeout),
-                       sig_info);
+        socket_connect(&sock->sd, sock->info.lsa->current_remote->ai_addr, get_server_poll_remaining_time(sock->server_poll_timeout), sig_info);
 
         if (sig_info->signal_received)
         {
@@ -2154,9 +2034,7 @@ phase2_socks_client(struct link_socket *sock, struct signal_info *sig_info)
 
 /* finalize socket initialization */
 void
-link_socket_init_phase2(struct link_socket *sock,
-                        const struct frame *frame,
-                        struct signal_info *sig_info)
+link_socket_init_phase2(struct link_socket *sock, const struct frame *frame, struct signal_info *sig_info)
 {
     const char *remote_dynamic = NULL;
     int sig_save = 0;
@@ -2216,8 +2094,7 @@ link_socket_init_phase2(struct link_socket *sock,
                  * and we should not connect a remote */
                 if (sock->info.af == AF_UNSPEC)
                 {
-                    msg(M_WARN, "Could not determine IPv4/IPv6 protocol. Using %s",
-                        addr_family_name(sock->info.lsa->bind_local->ai_family));
+                    msg(M_WARN, "Could not determine IPv4/IPv6 protocol. Using %s", addr_family_name(sock->info.lsa->bind_local->ai_family));
                     sock->info.af = sock->info.lsa->bind_local->ai_family;
                 }
 
@@ -2240,8 +2117,7 @@ link_socket_init_phase2(struct link_socket *sock,
 
         if (sock->info.proto == PROTO_TCP_SERVER)
         {
-            phase2_tcp_server(sock, remote_dynamic,
-                              &sig_info->signal_received);
+            phase2_tcp_server(sock, remote_dynamic, &sig_info->signal_received);
         }
         else if (sock->info.proto == PROTO_TCP_CLIENT)
         {
@@ -2252,12 +2128,7 @@ link_socket_init_phase2(struct link_socket *sock,
         {
             phase2_socks_client(sock, sig_info);
         }
-#ifdef TARGET_ANDROID
-        if (sock->sd != -1)
-        {
-            protect_fd_nonlocal(sock->sd, &sock->info.lsa->actual.dest.addr.sa);
-        }
-#endif
+		
         if (sig_info->signal_received)
         {
             goto done;
@@ -2362,11 +2233,8 @@ ipchange_fmt(const bool include_cmd, struct argv *argv, const struct link_socket
 }
 
 void
-link_socket_connection_initiated(const struct buffer *buf,
-                                 struct link_socket_info *info,
-                                 const struct link_socket_actual *act,
-                                 const char *common_name,
-                                 struct env_set *es)
+link_socket_connection_initiated(const struct buffer *buf, struct link_socket_info *info,
+		const struct link_socket_actual *act, const char *common_name, struct env_set *es)
 {
     struct gc_arena gc = gc_new();
 

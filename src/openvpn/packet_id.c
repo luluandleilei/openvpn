@@ -472,8 +472,7 @@ packet_id_persist_load(struct packet_id_persist *p, const char *filename)
 void
 packet_id_persist_save(struct packet_id_persist *p)
 {
-    if (packet_id_persist_enabled(p) && p->time && (p->time != p->time_last_written
-                                                    || p->id != p->id_last_written))
+    if (packet_id_persist_enabled(p) && p->time && (p->time != p->time_last_written || p->id != p->id_last_written))
     {
         struct packet_id_persist_file_image image;
         ssize_t n;
@@ -490,21 +489,16 @@ packet_id_persist_save(struct packet_id_persist *p)
             {
                 p->time_last_written = p->time;
                 p->id_last_written = p->id;
-                dmsg(D_PID_PERSIST_DEBUG, "PID Persist Write to %s: %s",
-                     p->filename, packet_id_persist_print(p, &gc));
+                dmsg(D_PID_PERSIST_DEBUG, "PID Persist Write to %s: %s", p->filename, packet_id_persist_print(p, &gc));
             }
             else
             {
-                msg(D_PID_PERSIST | M_ERRNO,
-                    "Cannot write to --replay-persist file %s",
-                    p->filename);
+                msg(D_PID_PERSIST | M_ERRNO, "Cannot write to --replay-persist file %s", p->filename);
             }
         }
         else
         {
-            msg(D_PID_PERSIST | M_ERRNO,
-                "Cannot seek to beginning of --replay-persist file %s",
-                p->filename);
+            msg(D_PID_PERSIST | M_ERRNO, "Cannot seek to beginning of --replay-persist file %s", p->filename);
         }
         gc_free(&gc);
     }

@@ -266,8 +266,7 @@ tv_within_sigma(const struct timeval *t1, const struct timeval *t2, unsigned int
 }
 
 /*
- * Used to determine in how many seconds we should be
- * called again.
+ * Used to determine in how many seconds we should be called again.
  */
 static inline void
 interval_earliest_wakeup(interval_t *wakeup, time_t at, time_t current)

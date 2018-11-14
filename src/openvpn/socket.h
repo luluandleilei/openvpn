@@ -103,9 +103,9 @@ struct link_socket_actual
 struct link_socket_addr
 {
     struct addrinfo *bind_local;
-    struct addrinfo *remote_list; /* complete remote list */
-    struct addrinfo *current_remote; /* remote used in the current connection attempt */
-    struct link_socket_actual actual; /* reply to this address */
+    struct addrinfo *remote_list; 		/* complete remote list */
+    struct addrinfo *current_remote; 	/* remote used in the current connection attempt */
+    struct link_socket_actual actual; 	/* reply to this address */
 };
 
 struct link_socket_info
@@ -316,9 +316,7 @@ link_socket_init_phase1(struct link_socket *sock,
                         struct event_timeout *server_poll_timeout,
                         unsigned int sockflags);
 
-void link_socket_init_phase2(struct link_socket *sock,
-                             const struct frame *frame,
-                             struct signal_info *sig_info);
+void link_socket_init_phase2(struct link_socket *sock, const struct frame *frame, struct signal_info *sig_info);
 
 void do_preresolve(struct context *c);
 
@@ -966,11 +964,8 @@ link_socket_get_outgoing_addr(struct buffer *buf,
 }
 
 static inline void
-link_socket_set_outgoing_addr(const struct buffer *buf,
-                              struct link_socket_info *info,
-                              const struct link_socket_actual *act,
-                              const char *common_name,
-                              struct env_set *es)
+link_socket_set_outgoing_addr(const struct buffer *buf, struct link_socket_info *info, 
+		const struct link_socket_actual *act, const char *common_name, struct env_set *es)
 {
     if (!buf || buf->len > 0)
     {

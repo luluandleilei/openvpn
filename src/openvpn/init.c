@@ -1321,9 +1321,7 @@ do_init_timers(struct context *c, bool deferred)
 #ifdef ENABLE_OCC
         /* initialize occ timers */
 
-        if (c->options.occ
-            && !TLS_MODE(c)
-            && c->c2.options_string_local && c->c2.options_string_remote)
+        if (c->options.occ && !TLS_MODE(c) && c->c2.options_string_local && c->c2.options_string_remote)
         {
             event_timeout_init(&c->c2.occ_interval, OCC_INTERVAL_SECONDS, now);
         }
@@ -1984,8 +1982,7 @@ do_up(struct context *c, bool pulled_options, unsigned int option_types_found)
             if (!c->c2.did_open_tun
                 && PULL_DEFINED(&c->options)
                 && c->c1.tuntap
-                && options_hash_changed_or_zero(&c->c1.pulled_options_digest_save,
-                                                &c->c2.pulled_options_digest))
+                && options_hash_changed_or_zero(&c->c1.pulled_options_digest_save, &c->c2.pulled_options_digest))
             {
                 /* if so, close tun, delete routes, then reinitialize tun and add routes */
                 msg(M_INFO, "NOTE: Pulled options changed on restart, will need to close and reopen TUN/TAP device.");
@@ -3167,8 +3164,7 @@ do_init_socket_1(struct context *c, const int mode)
 static void
 do_init_socket_2(struct context *c)
 {
-    link_socket_init_phase2(c->c2.link_socket, &c->c2.frame,
-                            c->sig);
+    link_socket_init_phase2(c->c2.link_socket, &c->c2.frame, c->sig);
 }
 
 /*
@@ -3348,11 +3344,10 @@ do_close_link_socket(struct context *c)
     /* Preserve the resolved list of remote if the user request to or if we want
      * reconnect to the same host again or there are still addresses that need
      * to be tried */
-    if (!(c->sig->signal_received == SIGUSR1
-          && ( (c->options.persist_remote_ip)
-               ||
-               ( c->sig->source != SIG_SOURCE_HARD
-                 && ((c->c1.link_socket_addr.current_remote && c->c1.link_socket_addr.current_remote->ai_next)
+    if (!(c->sig->signal_received == SIGUSR1 
+			&& ( (c->options.persist_remote_ip)
+               || ( c->sig->source != SIG_SOURCE_HARD
+                 	&& ((c->c1.link_socket_addr.current_remote && c->c1.link_socket_addr.current_remote->ai_next)
                      || c->options.no_advance))
                )))
     {

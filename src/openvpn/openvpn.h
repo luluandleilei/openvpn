@@ -272,21 +272,20 @@ struct context_2
     /*
      * Statistics
      */
-    counter_type tun_read_bytes;
-    counter_type tun_write_bytes;
-    counter_type link_read_bytes;
-    counter_type link_read_bytes_auth;
-    counter_type link_write_bytes;
+    counter_type tun_read_bytes;		//TUN/TAP read bytes
+    counter_type tun_write_bytes;		//TUN/TAP write bytes
+    counter_type link_read_bytes;		//TCP/UDP read bytes
+    counter_type link_read_bytes_auth;	//Auth read bytes
+    counter_type link_write_bytes;		//TCP/UDP write bytes
 #ifdef PACKET_TRUNCATION_CHECK
-    counter_type n_trunc_tun_read;
-    counter_type n_trunc_tun_write;
-    counter_type n_trunc_pre_encrypt;
-    counter_type n_trunc_post_decrypt;
+    counter_type n_trunc_tun_read;		//TUN read truncations
+    counter_type n_trunc_tun_write;		//TUN write truncations
+    counter_type n_trunc_pre_encrypt;	//Pre-encrypt truncations
+    counter_type n_trunc_post_decrypt;	//Post-decrypt truncations
 #endif
 
     /*
-     * Timer objects for ping and inactivity
-     * timeout features.
+     * Timer objects for ping and inactivity timeout features.
      */
     struct event_timeout wait_for_connect;
     struct event_timeout ping_send_interval;

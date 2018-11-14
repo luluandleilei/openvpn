@@ -480,8 +480,7 @@ struct tls_multi
      */
     struct link_socket_actual to_link_addr;
 
-    int n_sessions;             /**< Number of sessions negotiated thus
-                                 *   far. */
+    int n_sessions;             /**< Number of sessions negotiated thus far. */
 
     /*
      * Number of errors.

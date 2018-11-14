@@ -60,11 +60,7 @@ print_status_mode(unsigned int flags)
 }
 
 struct status_output *
-status_open(const char *filename,
-            const int refresh_freq,
-            const int msglevel,
-            const struct virtual_output *vout,
-            const unsigned int flags)
+status_open(const char *filename, const int refresh_freq, const int msglevel, const struct virtual_output *vout, const unsigned int flags)
 {
     struct status_output *so = NULL;
     if (filename || msglevel >= 0 || vout)
@@ -81,21 +77,15 @@ status_open(const char *filename,
             switch (so->flags)
             {
                 case STATUS_OUTPUT_WRITE:
-                    so->fd = platform_open(filename,
-                                           O_CREAT | O_TRUNC | O_WRONLY,
-                                           S_IRUSR | S_IWUSR);
+                    so->fd = platform_open(filename, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
                     break;
 
                 case STATUS_OUTPUT_READ:
-                    so->fd = platform_open(filename,
-                                           O_RDONLY,
-                                           S_IRUSR | S_IWUSR);
+                    so->fd = platform_open(filename, O_RDONLY, S_IRUSR | S_IWUSR);
                     break;
 
                 case STATUS_OUTPUT_READ|STATUS_OUTPUT_WRITE:
-                    so->fd = platform_open(filename,
-                                           O_CREAT | O_RDWR,
-                                           S_IRUSR | S_IWUSR);
+                    so->fd = platform_open(filename, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
                     break;
 
                 default:

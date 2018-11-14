@@ -63,11 +63,7 @@ struct status_output
     bool errors;
 };
 
-struct status_output *status_open(const char *filename,
-                                  const int refresh_freq,
-                                  const int msglevel,
-                                  const struct virtual_output *vout,
-                                  const unsigned int flags);
+struct status_output *status_open(const char *filename, const int refresh_freq, const int msglevel, const struct virtual_output *vout, const unsigned int flags);
 
 bool status_trigger_tv(struct status_output *so, struct timeval *tv);
 

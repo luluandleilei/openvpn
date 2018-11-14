@@ -1206,7 +1206,7 @@ lame_duck_must_die(const struct tls_session *session, interval_t *wakeup)
     {
         return true;
     }
-    else
+    else	//lame->state == S_UNDEF
     {
         return false;
     }
@@ -1437,6 +1437,7 @@ write_control_auth(struct tls_session *session,
         ASSERT(session_id_write_prepend(&session->session_id, buf));
         ASSERT(buf_write_prepend(buf, &header, sizeof(header)));
     }
+	
     if (session->tls_wrap.mode == TLS_WRAP_AUTH)
     {
         /* no encryption, only write hmac */
@@ -2659,12 +2660,8 @@ auth_deferred_expire_window(const struct tls_options *o)
  * want to send to our peer.
  */
 static bool
-tls_process(struct tls_multi *multi,
-            struct tls_session *session,
-            struct buffer *to_link,
-            struct link_socket_actual **to_link_addr,
-            struct link_socket_info *to_link_socket_info,
-            interval_t *wakeup)
+tls_process(struct tls_multi *multi, struct tls_session *session, struct buffer *to_link,
+	struct link_socket_actual **to_link_addr, struct link_socket_info *to_link_socket_info, interval_t *wakeup)
 {
     struct gc_arena gc = gc_new();
     struct buffer *buf;
@@ -2680,12 +2677,9 @@ tls_process(struct tls_multi *multi,
 
     /* Should we trigger a soft reset? -- new key, keeps old key for a while */
     if (ks->state >= S_ACTIVE
-        && ((session->opt->renegotiate_seconds
-             && now >= ks->established + session->opt->renegotiate_seconds)
-            || (session->opt->renegotiate_bytes > 0
-                && ks->n_bytes >= session->opt->renegotiate_bytes)
-            || (session->opt->renegotiate_packets
-                && ks->n_packets >= session->opt->renegotiate_packets)
+        && ((session->opt->renegotiate_seconds && now >= ks->established + session->opt->renegotiate_seconds)
+            || (session->opt->renegotiate_bytes > 0 && ks->n_bytes >= session->opt->renegotiate_bytes)
+            || (session->opt->renegotiate_packets && ks->n_packets >= session->opt->renegotiate_packets)
             || (packet_id_close_to_wrapping(&ks->crypto_options.packet_id.send))))
     {
         msg(D_TLS_DEBUG_LOW, "TLS: soft reset sec=%d/%d bytes=" counter_format
@@ -2774,8 +2768,7 @@ tls_process(struct tls_multi *multi,
              * Attempt CRL reload before TLS negotiation. Won't be performed if
              * the file was not modified since the last reload
              */
-            if (session->opt->crl_file
-                && !(session->opt->ssl_flags & SSLF_CRL_VERIFY_DIR))
+            if (session->opt->crl_file && !(session->opt->ssl_flags & SSLF_CRL_VERIFY_DIR))
             {
                 tls_ctx_reload_crl(&session->opt->ssl_ctx, session->opt->crl_file, session->opt->crl_file_inline);
             }
@@ -3047,11 +3040,8 @@ error:
  */
 
 int
-tls_multi_process(struct tls_multi *multi,
-                  struct buffer *to_link,
-                  struct link_socket_actual **to_link_addr,
-                  struct link_socket_info *to_link_socket_info,
-                  interval_t *wakeup)
+tls_multi_process(struct tls_multi *multi, struct buffer *to_link, struct link_socket_actual **to_link_addr, 
+	struct link_socket_info *to_link_socket_info, interval_t *wakeup)
 {
     struct gc_arena gc = gc_new();
     int i;
@@ -3075,18 +3065,13 @@ tls_multi_process(struct tls_multi *multi,
         struct key_state *ks_lame = &session->key[KS_LAME_DUCK];
 
         /* set initial remote address */
-        if (i == TM_ACTIVE && ks->state == S_INITIAL
-            && link_socket_actual_defined(&to_link_socket_info->lsa->actual))
+        if (i == TM_ACTIVE && ks->state == S_INITIAL && link_socket_actual_defined(&to_link_socket_info->lsa->actual))
         {
             ks->remote_addr = to_link_socket_info->lsa->actual;
         }
 
-        dmsg(D_TLS_DEBUG,
-             "TLS: tls_multi_process: i=%d state=%s, mysid=%s, stored-sid=%s, stored-ip=%s",
-             i,
-             state_name(ks->state),
-             session_id_print(&session->session_id, &gc),
-             session_id_print(&ks->session_id_remote, &gc),
+        dmsg(D_TLS_DEBUG, "TLS: tls_multi_process: i=%d state=%s, mysid=%s, stored-sid=%s, stored-ip=%s",
+             i, state_name(ks->state), session_id_print(&session->session_id, &gc), session_id_print(&ks->session_id_remote, &gc),
              print_link_socket_actual(&ks->remote_addr, &gc));
 
         if (ks->state >= S_INITIAL && link_socket_actual_defined(&ks->remote_addr))

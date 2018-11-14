@@ -83,8 +83,7 @@
  * Various timeouts
  */
 #define TLS_MULTI_REFRESH 15    /* call tls_multi_process once every n seconds */
-#define TLS_MULTI_HORIZON 2     /* call tls_multi_process frequently for n seconds after
-                                 * every packet sent/received action */
+#define TLS_MULTI_HORIZON 2     /* call tls_multi_process frequently for n seconds after every packet sent/received action */
 
 /*
  * The SSL/TLS worker thread will wait at most this many seconds for the

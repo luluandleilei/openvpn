@@ -59,7 +59,7 @@ event_timeout_trigger(struct event_timeout *et, struct timeval *tv, const int et
             {
                 et->last = local_now;
                 wakeup = et->n;
-                ret = true;	//XXX: 此语句是否应该被放到该if语句之后？
+                ret = true;
             }
             else
             {

@@ -947,9 +947,7 @@ pull_filter_type_name(int type)
 #endif
 
 static void
-setenv_connection_entry(struct env_set *es,
-                        const struct connection_entry *e,
-                        const int i)
+setenv_connection_entry(struct env_set *es, const struct connection_entry *e, const int i)
 {
     setenv_str_i(es, "proto", proto2ascii(e->proto, e->af, false), i);
     setenv_str_i(es, "local", e->local, i);
@@ -5365,8 +5363,7 @@ add_option(struct options *options, char *p[], const char *file, int line, const
                 max_int(positive_atoi(p[2]), options->ce.connect_retry_seconds);
         }
     }
-    else if ((streq(p[0], "connect-timeout") || streq(p[0], "server-poll-timeout"))
-             && p[1] && !p[2])
+    else if ((streq(p[0], "connect-timeout") || streq(p[0], "server-poll-timeout")) && p[1] && !p[2])
     {
         VERIFY_PERMISSION(OPT_P_GENERAL|OPT_P_CONNECTION);
         options->ce.connect_timeout = positive_atoi(p[1]);
@@ -5815,9 +5812,7 @@ add_option(struct options *options, char *p[], const char *file, int line, const
         af = ascii2af(p[1]);
         if (proto < 0)
         {
-            msg(msglevel, "Bad protocol: '%s'.  Allowed protocols with --proto option: %s",
-                p[1],
-                proto2ascii_all(&gc));
+            msg(msglevel, "Bad protocol: '%s'.  Allowed protocols with --proto option: %s", p[1], proto2ascii_all(&gc));
             goto err;
         }
         options->ce.proto = proto;
