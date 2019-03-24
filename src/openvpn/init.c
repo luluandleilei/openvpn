@@ -98,6 +98,8 @@ context_clear_all_except_first_time(struct context *c)
  * Pass tunnel endpoint and MTU parms to a user-supplied script.
  * Used to execute the up/down script/plugins.
  */
+//将隧道端点和MTU参数传递给用户提供的脚本。
+//用于执行上/下脚本/插件。
 static void
 run_up_down(const char *command,
             const struct plugin_list *plugins,
@@ -151,12 +153,7 @@ run_up_down(const char *command,
     {
         struct argv argv = argv_new();
         ASSERT(arg);
-        argv_printf(&argv,
-                    "%s %d %d %s %s %s",
-                    arg,
-                    tun_mtu, link_mtu,
-                    ifconfig_local, ifconfig_remote,
-                    context);
+        argv_printf(&argv, "%s %d %d %s %s %s", arg, tun_mtu, link_mtu, ifconfig_local, ifconfig_remote, context);
 
         if (plugin_call(plugins, plugin_type, &argv, NULL, es) != OPENVPN_PLUGIN_FUNC_SUCCESS)
         {
@@ -172,8 +169,7 @@ run_up_down(const char *command,
         ASSERT(arg);
         setenv_str(es, "script_type", script_type);
         argv_parse_cmd(&argv, command);
-        argv_printf_cat(&argv, "%s %d %d %s %s %s", arg, tun_mtu, link_mtu,
-                        ifconfig_local, ifconfig_remote, context);
+        argv_printf_cat(&argv, "%s %d %d %s %s %s", arg, tun_mtu, link_mtu, ifconfig_local, ifconfig_remote, context);
         argv_msg(M_INFO, &argv);
         openvpn_run_script(&argv, es, S_FATAL, "--up/--down");
         argv_reset(&argv);
@@ -725,13 +721,9 @@ init_static(void)
     crypto_init_dmalloc();
 #endif
 
-
-    /*
-     * Initialize random number seed.  random() is only used
-     * when "weak" random numbers are acceptable.
-     * SSL library routines are always used when cryptographically
-     * strong random numbers are required.
-     */
+	//初始化随机数种子。 
+	//random()仅在“弱”随机数可接受时使用。
+    //当需要加密强随机数时，始终使用SSL库例程。
     struct timeval tv;
     if (!gettimeofday(&tv, NULL))
     {
@@ -994,7 +986,7 @@ init_options_dev(struct options *options)
 {
     if (!options->dev && options->dev_node)
     {
-        char *dev_node = string_alloc(options->dev_node, NULL); /* POSIX basename() implementaions may modify its arguments */
+        char *dev_node = string_alloc(options->dev_node, NULL); /* POSIX basename() implementations may modify its arguments */
         options->dev = basename(dev_node);
     }
 }
@@ -1039,17 +1031,17 @@ print_openssl_info(const struct options *options)
 bool
 do_genkey(const struct options *options)
 {
+    /* should we disable paging? */
+    if (options->mlock && (options->genkey || options->tls_crypt_v2_genkey_file))
+    {
+        platform_mlockall(true);
+    }
     if (options->genkey)
     {
         int nbits_written;
 
         notnull(options->shared_secret_file,
                 "shared secret output file (--secret)");
-
-        if (options->mlock)     /* should we disable paging? */
-        {
-            platform_mlockall(true);
-        }
 
         nbits_written = write_key_file(2, options->shared_secret_file);
         if (nbits_written < 0)
@@ -1062,6 +1054,29 @@ do_genkey(const struct options *options)
             options->shared_secret_file);
         return true;
     }
+    if (options->tls_crypt_v2_genkey_type)
+    {
+        if (!strcmp(options->tls_crypt_v2_genkey_type, "server"))
+        {
+            tls_crypt_v2_write_server_key_file(options->tls_crypt_v2_genkey_file);
+            return true;
+        }
+        if (options->tls_crypt_v2_genkey_type
+            && !strcmp(options->tls_crypt_v2_genkey_type, "client"))
+        {
+            if (!options->tls_crypt_v2_file)
+            {
+                msg(M_USAGE, "--tls-crypt-v2-genkey requires a server key to be set via --tls-crypt-v2 to create a client key");
+            }
+
+            tls_crypt_v2_write_client_key_file(options->tls_crypt_v2_genkey_file,
+                                               options->tls_crypt_v2_metadata, options->tls_crypt_v2_file,
+                                               options->tls_crypt_v2_inline);
+            return true;
+        }
+
+        msg(M_USAGE, "--tls-crypt-v2-genkey type should be \"client\" or \"server\"");
+    }
     return false;
 }
 
@@ -1073,7 +1088,7 @@ do_persist_tuntap(const struct options *options)
 {
     if (options->persist_config)
     {
-        /* sanity check on options for --mktun or --rmtun */
+		//--mktun或--rmtun的选项的完整性检查
         notnull(options->dev, "TUN/TAP device (--dev)");
         if (options->ce.remote || options->ifconfig_local
             || options->ifconfig_remote_netmask
@@ -1098,7 +1113,7 @@ do_persist_tuntap(const struct options *options)
              "options --mktun and --rmtun are not available on your operating "
              "system.  Please check 'man tun' (or 'tap'), whether your system "
              "supports using 'ifconfig %s create' / 'destroy' to create/remove "
-             "persistant tunnel interfaces.", options->dev );
+             "persistent tunnel interfaces.", options->dev );
 #endif
     }
     return false;
@@ -1286,9 +1301,8 @@ do_init_server_poll_timeout(struct context *c)
     }
 }
 
-/*
- * Initialize timers
- */
+//初始化定时器
+//deferred: 用于表示调用do_init_timers函数的时机
 static void
 do_init_timers(struct context *c, bool deferred)
 {
@@ -1360,11 +1374,9 @@ do_init_traffic_shaper(struct context *c)
 #endif
 }
 
-/*
- * Allocate route list structures for IPv4 and IPv6
- * (we do this for IPv4 even if no --route option has been seen, as other
- * parts of OpenVPN might want to fill the route-list with info, e.g. DHCP)
- */
+//为IPv4和IPv6分配路由列表结构
+//(即使没有看到--route选项，我们也会为IPv4执行此操作，
+//因为OpenVPN的其他部分可能希望用信息填充路由列表，例如DHCP)
 static void
 do_alloc_route_list(struct context *c)
 {
@@ -1386,7 +1398,7 @@ do_alloc_route_list(struct context *c)
 static void
 do_init_route_list(const struct options *options,
                    struct route_list *route_list,
-                   const struct link_socket_info *link_socket_info,
+                   const struct link_socket_info *link_socket_info, //TODO
                    struct env_set *es)
 {
     const char *gw = NULL;
@@ -1428,12 +1440,10 @@ do_init_route_ipv6_list(const struct options *options,
     int metric = -1;            /* no metric set */
 
     gw = options->ifconfig_ipv6_remote;         /* default GW = remote end */
-#if 0                                   /* not yet done for IPv6 - TODO!*/
-    if (options->route_ipv6_default_gateway)            /* override? */
+    if (options->route_ipv6_default_gateway)
     {
         gw = options->route_ipv6_default_gateway;
     }
-#endif
 
     if (options->route_default_metric)
     {
@@ -1477,6 +1487,7 @@ initialization_sequence_completed(struct context *c, const unsigned int flags)
     static const char message[] = "Initialization Sequence Completed";
 
     /* Reset the unsuccessful connection counter on complete initialisation */
+	//在完成初始化时重置不成功的连接计数器
     c->options.unsuccessful_attempts = 0;
 
     /* If we delayed UID/GID downgrade or chroot, do it now */
@@ -1644,10 +1655,8 @@ do_init_tun(struct context *c)
     c->c1.tuntap_owned = true;
 }
 
-/*
- * Open tun/tap device, ifconfig, call up script, etc.
- */
-
+//打开tun/tap设备，ifconfig，调用up脚本等。
+//返回值表示是否真的创建了一个新的tun/tap网卡，还是复用之前的
 static bool
 do_open_tun(struct context *c)
 {
@@ -1656,14 +1665,14 @@ do_open_tun(struct context *c)
 
     if (!c->c1.tuntap)
     {
-
-	    /* initialize (but do not open) tun/tap object */
+		//初始化 (但并不打开) tun/tap对象
 	    do_init_tun(c);
 
-	    /* allocate route list structure */
+	    //分配路由列表结构
 	    do_alloc_route_list(c);
 
 	    /* parse and resolve the route option list */
+		//解析并解析路由选项列表
 	    ASSERT(c->c2.link_socket);
 	    if (c->options.routes && c->c1.route_list)
 	    {
@@ -1677,8 +1686,7 @@ do_open_tun(struct context *c)
 	    /* do ifconfig */
 	    if (!c->options.ifconfig_noexec && ifconfig_order() == IFCONFIG_BEFORE_TUN_OPEN)
 	    {
-	        /* guess actual tun/tap unit number that will be returned
-	         * by open_tun */
+	        //猜测将由open_tun返回的实际的tun/tap单元号
 	        const char *guess = guess_tuntap_dev(c->options.dev, c->options.dev_type, c->options.dev_node, &gc);
 	        do_ifconfig(c->c1.tuntap, guess, TUN_MTU_SIZE(&c->c2.frame), c->c2.es);
 	    }
@@ -1693,19 +1701,19 @@ do_open_tun(struct context *c)
 	    /* open the tun device */
 	    open_tun(c->options.dev, c->options.dev_type, c->options.dev_node, c->c1.tuntap);
 
-	    /* set the hardware address */
+	    //设置硬件地址
 	    if (c->options.lladdr)
 	    {
 	        set_lladdr(c->c1.tuntap->actual_name, c->options.lladdr, c->c2.es);
 	    }
 
-	    /* do ifconfig */
+	    //执行 ifconfig
 	    if (!c->options.ifconfig_noexec && ifconfig_order() == IFCONFIG_AFTER_TUN_OPEN)
 	    {
 	        do_ifconfig(c->c1.tuntap, c->c1.tuntap->actual_name, TUN_MTU_SIZE(&c->c2.frame), c->c2.es);
 	    }
 
-	    /* run the up script */
+	    /* run the up script */ //运行up脚本
 	    run_up_down(c->options.up_script,
 	                c->plugins,
 	                OPENVPN_PLUGIN_UP,
@@ -1741,7 +1749,7 @@ do_open_tun(struct context *c)
 	    static_context = c;
 
 	}
-	else
+	else //XXX: 什么时候会发生这种情况? --persist-tun?
 	{
 	    msg(M_INFO, "Preserving previous TUN/TAP instance: %s", c->c1.tuntap->actual_name);
 
@@ -2269,7 +2277,7 @@ socket_restart_pause(struct context *c)
     }
     c->persist.restart_sleep_seconds = 0;
 
-    /* do managment hold on context restart, i.e. second, third, fourth, etc. initialization */
+    /* do management hold on context restart, i.e. second, third, fourth, etc. initialization */
     if (do_hold(sec))
     {
         sec = 0;
@@ -2335,6 +2343,7 @@ key_schedule_free(struct key_schedule *ks, bool free_ssl_ctx)
     if (tls_ctx_initialised(&ks->ssl_ctx) && free_ssl_ctx)
     {
         tls_ctx_free(&ks->ssl_ctx);
+        free_key_ctx(&ks->tls_crypt_v2_server_key);
     }
     CLEAR(*ks);
 }
@@ -2439,7 +2448,8 @@ do_init_tls_wrap_key(struct context *c)
         if (!streq(options->authname, "none"))
         {
             c->c1.ks.tls_auth_key_type.digest = md_kt_get(options->authname);
-			c->c1.ks.tls_auth_key_type.hmac_length = md_kt_size(c->c1.ks.tls_auth_key_type.digest);
+            c->c1.ks.tls_auth_key_type.hmac_length =
+                md_kt_size(c->c1.ks.tls_auth_key_type.digest);
         }
         else
         {
@@ -2456,6 +2466,26 @@ do_init_tls_wrap_key(struct context *c)
     {
         tls_crypt_init_key(&c->c1.ks.tls_wrap_key, options->ce.tls_crypt_file, options->ce.tls_crypt_inline, options->tls_server);
     }
+
+    /* tls-crypt with client-specific keys (--tls-crypt-v2) */
+    if (options->ce.tls_crypt_v2_file)
+    {
+        if (options->tls_server)
+        {
+            tls_crypt_v2_init_server_key(&c->c1.ks.tls_crypt_v2_server_key,
+                                         true, options->ce.tls_crypt_v2_file,
+                                         options->ce.tls_crypt_v2_inline);
+        }
+        else
+        {
+            tls_crypt_v2_init_client_key(&c->c1.ks.tls_wrap_key,
+                                         &c->c1.ks.tls_crypt_v2_wkc,
+                                         options->ce.tls_crypt_v2_file,
+                                         options->ce.tls_crypt_v2_inline);
+        }
+    }
+
+
 }
 
 /*
@@ -2496,7 +2526,7 @@ do_init_crypto_tls_c1(struct context *c)
             return;
 #else  /* if P2MP */
             msg(M_FATAL, "Error: private key password verification failed");
-#endif
+#endif /* if P2MP */
         }
 
         /* Get cipher & hash algorithms */
@@ -2505,7 +2535,7 @@ do_init_crypto_tls_c1(struct context *c)
         /* Initialize PRNG with config-specified digest */
         prng_init(options->prng_hash, options->prng_nonce_secret_len);
 
-        /* initialize tls-auth/crypt key */
+        /* initialize tls-auth/crypt/crypt-v2 key */
         do_init_tls_wrap_key(c);
 
 #if 0 /* was: #if ENABLE_INLINE_FILES --  Note that enabling this code will break restarts */
@@ -2601,14 +2631,16 @@ do_init_crypto_tls(struct context *c, const unsigned int flags)
     if (options->renegotiate_seconds_min < 0)
     {
         /* Add 10% jitter to reneg-sec by default (server side only) */
-        int auto_jitter = options->mode != MODE_SERVER ? 0 : get_random() % max_int(options->renegotiate_seconds / 10, 1);
+        int auto_jitter = options->mode != MODE_SERVER ? 0 :
+                          get_random() % max_int(options->renegotiate_seconds / 10, 1);
         to.renegotiate_seconds = options->renegotiate_seconds - auto_jitter;
     }
     else
     {
         /* Add user-specified jitter to reneg-sec */
-        to.renegotiate_seconds = options->renegotiate_seconds -
-                (get_random() % max_int(options->renegotiate_seconds - options->renegotiate_seconds_min, 1));
+        to.renegotiate_seconds = options->renegotiate_seconds
+                                 -(get_random() % max_int(options->renegotiate_seconds
+                                                          - options->renegotiate_seconds_min, 1));
     }
     to.single_session = options->single_session;
     to.mode = options->mode;
@@ -2719,13 +2751,29 @@ do_init_crypto_tls(struct context *c, const unsigned int flags)
     }
 
     /* TLS handshake encryption (--tls-crypt) */
-    if (options->ce.tls_crypt_file)
+    if (options->ce.tls_crypt_file
+        || (options->ce.tls_crypt_v2_file && options->tls_client))
     {
         to.tls_wrap.mode = TLS_WRAP_CRYPT;
         to.tls_wrap.opt.key_ctx_bi = c->c1.ks.tls_wrap_key;
         to.tls_wrap.opt.pid_persist = &c->c1.pid_persist;
         to.tls_wrap.opt.flags |= CO_PACKET_ID_LONG_FORM;
         tls_crypt_adjust_frame_parameters(&to.frame);
+
+        if (options->ce.tls_crypt_v2_file)
+        {
+            to.tls_wrap.tls_crypt_v2_wkc = &c->c1.ks.tls_crypt_v2_wkc;
+        }
+    }
+
+    if (options->ce.tls_crypt_v2_file)
+    {
+        to.tls_crypt_v2 = true;
+        if (options->tls_server)
+        {
+            to.tls_wrap.tls_crypt_v2_server_key = c->c1.ks.tls_crypt_v2_server_key;
+            to.tls_crypt_v2_verify_script = c->options.tls_crypt_v2_verify_script;
+        }
     }
 
     /* If we are running over TCP, allow for length prefix */
@@ -2881,7 +2929,7 @@ do_init_frame(struct context *c)
     /* packets with peer-id (P_DATA_V2) need 3 extra bytes in frame (on client)
      * and need link_mtu+3 bytes on socket reception (on server).
      *
-     * accomodate receive path in f->extra_link, which has the side effect of
+     * accommodate receive path in f->extra_link, which has the side effect of
      * also increasing send buffers (BUF_SIZE() macro), which need to be
      * allocated big enough before receiving peer-id option from server.
      *
@@ -3007,7 +3055,7 @@ do_option_warnings(struct context *c)
         msg(M_WARN, "WARNING: --ns-cert-type is DEPRECATED.  Use --remote-cert-tls instead.");
     }
 
-    /* If a script is used, print appropiate warnings */
+    /* If a script is used, print appropriate warnings */
     if (o->user_script_used)
     {
         if (script_security() >= SSEC_SCRIPTS)
@@ -3321,6 +3369,8 @@ do_close_free_key_schedule(struct context *c, bool free_ssl_ctx)
      */
     free_key_ctx_bi(&c->c1.ks.tls_wrap_key);
     CLEAR(c->c1.ks.tls_wrap_key);
+    buf_clear(&c->c1.ks.tls_crypt_v2_wkc);
+    free_buf(&c->c1.ks.tls_crypt_v2_wkc);
 
     if (!(c->sig->signal_received == SIGUSR1 && c->options.persist_key))
     {
@@ -3372,7 +3422,7 @@ do_close_link_socket(struct context *c)
 }
 
 /*
- * Close packet-id persistance file
+ * Close packet-id persistence file
  */
 static void
 do_close_packet_id(struct context *c)
@@ -3400,10 +3450,7 @@ do_close_fragment(struct context *c)
 }
 #endif
 
-/*
- * Open and close our event objects.
- */
-
+//打开我们的事件对象(event objects)
 static void
 do_event_set_init(struct context *c, bool need_us_timeout)
 {
@@ -3422,6 +3469,7 @@ do_event_set_init(struct context *c, bool need_us_timeout)
     c->c2.event_set_owned = true;
 }
 
+//关闭我们的事件对象(event objects)
 static void
 do_close_event_set(struct context *c)
 {
@@ -3462,7 +3510,7 @@ do_close_status_output(struct context *c)
 }
 
 /*
- * Handle ifconfig-pool persistance object.
+ * Handle ifconfig-pool persistence object.
  */
 static void
 do_open_ifconfig_pool_persist(struct context *c)
@@ -3516,14 +3564,10 @@ do_env_set_destroy(struct context *c)
     }
 }
 
-/*
- * Fast I/O setup.  Fast I/O is an optimization which only works
- * if all of the following are true:
- *
- * (1) The platform is not Windows
- * (2) --proto udp is enabled
- * (3) --shaper is disabled
- */
+//Fast I/O 设置。 Fast I/O是一种优化，仅在满足以下所有条件时才有效
+//(1)平台不是Windows
+//(2)--proto udp已启用
+//(3)--shaper已禁用
 static void
 do_setup_fast_io(struct context *c)
 {
@@ -3989,7 +4033,7 @@ init_instance(struct context *c, const struct env_set *env, const unsigned int f
     }
 #endif
 
-    /* init crypto layer */
+    //初始化加密层
     {
         unsigned int crypto_flags = 0;
         if (c->mode == CM_TOP)
@@ -4074,7 +4118,7 @@ init_instance(struct context *c, const struct env_set *env, const unsigned int f
         do_init_traffic_shaper(c);
     }
 
-    /* do one-time inits, and possibily become a daemon here */
+    /* do one-time inits, and possibly become a daemon here */
     do_init_first_time(c);
 
 #ifdef ENABLE_PLUGIN
@@ -4086,6 +4130,7 @@ init_instance(struct context *c, const struct env_set *env, const unsigned int f
 #endif
 
     /* initialise connect timeout timer */
+	//初始化连接超时定时器
     do_init_server_poll_timeout(c);
 
     /* finalize the TCP/UDP socket */
@@ -4204,7 +4249,7 @@ close_instance(struct context *c)
         do_close_plugins(c);
 #endif
 
-        /* close packet-id persistance file */
+        /* close packet-id persistence file */
         do_close_packet_id(c);
 
         /* close --status file */
@@ -4250,6 +4295,7 @@ inherit_context_child(struct context *dest,
     dest->c1.ks.ssl_ctx = src->c1.ks.ssl_ctx;
     dest->c1.ks.tls_wrap_key = src->c1.ks.tls_wrap_key;
     dest->c1.ks.tls_auth_key_type = src->c1.ks.tls_auth_key_type;
+    dest->c1.ks.tls_crypt_v2_server_key = src->c1.ks.tls_crypt_v2_server_key;
     /* inherit pre-NCP ciphers */
     dest->c1.ciphername = src->c1.ciphername;
     dest->c1.authname = src->c1.authname;

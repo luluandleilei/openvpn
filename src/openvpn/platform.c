@@ -41,6 +41,7 @@
 
 /* Redefine the top level directory of the filesystem
  * to restrict access to files for security */
+//重新定义文件系统的顶级目录以限制对文件的访问以确保安全性
 void
 platform_chroot(const char *path)
 {

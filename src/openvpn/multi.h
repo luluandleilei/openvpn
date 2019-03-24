@@ -50,9 +50,9 @@
  */
 struct multi_reap
 {
-    int bucket_base;
-    int buckets_per_pass;
-    time_t last_call;
+    int bucket_base; //进行reap操作时，遍历的m->vhash起始冲突桶的索引
+    int buckets_per_pass; //进行reap操作时，遍历的m->vhash冲突桶的个数
+    time_t last_call; //记录上次进行rape操作的时间，用于定时器
 };
 
 
@@ -80,27 +80,23 @@ struct multi_instance {
     bool halt;
     int refcount;
     int route_count;           /* number of routes (including cached routes) owned by this instance */
-    time_t created;             /**< Time at which a VPN tunnel instance
-                                 *   was created.  This parameter is set
-                                 *   by the \c multi_create_instance()
-                                 *   function. */
+    time_t created; //创建VPN隧道实例的时间. 此参数由multi_create_instance()函数设置.
     struct timeval wakeup;     /* absolute time */
-    struct mroute_addr real;    /**< External network address of the
-                                 *   remote peer. */
+    struct mroute_addr real; //远程对等体的外部网络地址。
     ifconfig_pool_handle vaddr_handle;
     char msg_prefix[MULTI_PREFIX_MAX_LENGTH];
 
     /* queued outgoing data in Server/TCP mode */
-    unsigned int tcp_rwflags;
-    struct mbuf_set *tcp_link_out_deferred;
-    bool socket_set_called;
+    unsigned int tcp_rwflags; //记录上次添加tcp套接字到事件驱动中时关注事件。用于比对新添加事件与上次事件不同时，才真的添加到事件驱动机制中
+    struct mbuf_set *tcp_link_out_deferred; //用于TCP套接字输出数据包的排队的缓冲区
+    bool socket_set_called; //表示已经调用socket_set将mi->context.c2.link_socket添加到事件驱动中
 
     in_addr_t reporting_addr;     /* IP address shown in status listing */
     struct in6_addr reporting_addr_ipv6; /* IPv6 address in status listing */
 
     bool did_open_context;
-    bool did_real_hash;
-    bool did_iter;
+    bool did_real_hash;  //表示已经将该实例加入到m->real哈希表中
+    bool did_iter; //表示已经将该实例加入到m->iter哈希表中
 #ifdef MANAGEMENT_DEF_AUTH
     bool did_cid_hash;
     struct buffer_list *cc_config;
@@ -137,22 +133,21 @@ struct multi_context {
 #define MC_WORK_THREAD                (MC_MULTI_THREADED_WORKER|MC_MULTI_THREADED_SCHEDULER)
     int thread_mode;
 
-    struct multi_instance **instances;  /**< Array of multi_instances. An instance can be
-                                         * accessed using peer-id as an index. */
+    struct multi_instance **instances;  //multi_instances的数组。 可以使用peer-id作为索引来访问实例。
 
     struct hash *hash;    		/* VPN tunnel instances indexed by real address of the remote peer. */
     struct hash *vhash;         /* VPN tunnel instances indexed by virtual address of remote hosts. */
     struct hash *iter;          /* VPN tunnel instances indexed by real address of the remote peer, optimized for iteration. */
     struct schedule *schedule;
     struct mbuf_set *mbuf;      /* Set of buffers for passing data channel packets between VPN tunnel instances. */
-    struct multi_tcp *mtcp;     /* State specific to OpenVPN using TCP as external transport. */
+    struct multi_tcp *mtcp;     //特定于使用TCP作为外部传输的OpenVPN的状态。特定于tcp的事件驱动机制
     struct ifconfig_pool *ifconfig_pool;
     struct frequency_limit *new_connection_limiter;
     struct mroute_helper *route_helper;
     struct multi_reap *reaper;
-    struct mroute_addr local;
+    struct mroute_addr local; //虚拟网卡的ip地址的mroute_addr表示形式
     bool enable_c2c;
-    int max_clients;
+    int max_clients; //并发客户端的最大个数
     int tcp_queue_limit;
     int status_file_version;
     int n_clients; /* current number of authenticated clients */
@@ -526,6 +521,7 @@ clear_prefix(void)
 #define MULTI_CACHE_ROUTE_TTL 60
 
 void multi_reap_process_dowork(const struct multi_context *m);
+
 void multi_process_per_second_timers_dowork(struct multi_context *m);
 
 static inline void
@@ -547,14 +543,10 @@ multi_process_per_second_timers(struct multi_context *m)
     }
 }
 
-/*
- * Compute earliest timeout expiry from the set of
- * all instances.  Output:
- *
- * m->earliest_wakeup : instance needing the earliest service.
- * dest               : earliest timeout as a delta in relation
- *                      to current time.
- */
+//从所有实例的集合计算最早的超时到期时间
+//输出：
+//	m->earliest_wakeup : 因为超时而需要最早服务的实例
+//	dest: 最早超时作为与当前时间相关的增量。
 static inline void
 multi_get_timeout(struct multi_context *m, struct timeval *dest)
 {

@@ -244,7 +244,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
 	[systemd],
-	[AS_HELP_STRING([--enable-systemd], [enable systemd suppport @<:@default=no@:>@])],
+	[AS_HELP_STRING([--enable-systemd], [enable systemd support @<:@default=no@:>@])],
 	,
 	[enable_systemd="no"]
 )
@@ -1389,8 +1389,6 @@ AC_CONFIG_FILES([
 	build/msvc/Makefile
 	build/msvc/msvc-generate/Makefile
 	distro/Makefile
-	distro/rpm/Makefile
-	distro/rpm/openvpn.spec
 	distro/systemd/Makefile
 	doc/Makefile
 	doc/doxygen/Makefile
@@ -1399,10 +1397,12 @@ AC_CONFIG_FILES([
 	src/Makefile
 	src/compat/Makefile
 	src/openvpn/Makefile
+	src/openvpnmsica/Makefile
 	src/openvpnserv/Makefile
 	src/plugins/Makefile
 	src/plugins/auth-pam/Makefile
 	src/plugins/down-root/Makefile
+	src/tapctl/Makefile
 	tests/Makefile
         tests/unit_tests/Makefile
         tests/unit_tests/example_test/Makefile

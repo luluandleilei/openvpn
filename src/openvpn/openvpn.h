@@ -66,6 +66,8 @@ struct key_schedule
     /* optional TLS control channel wrapping */
     struct key_type tls_auth_key_type;
     struct key_ctx_bi tls_wrap_key;
+    struct key_ctx tls_crypt_v2_server_key;
+    struct buffer tls_crypt_v2_wkc;             /**< Wrapped client key */
 };
 
 /*
@@ -164,14 +166,11 @@ struct context_1
 
 	/* Tun/tap virtual network interface. */
     struct tuntap *tuntap;      
-    bool tuntap_owned;          /* Whether the tun/tap interface should be cleaned up when this context is cleaned up. */
+    bool tuntap_owned; //清除此context时是否应清除tun/tap接口。
                                  
-	/* List of routing information. See the --route command line option. */
-    struct route_list *route_list;
+    struct route_list *route_list; //路由信息列表。 请参阅--route命令行选项。
   
-
-    /* list of --route-ipv6 directives */
-    struct route_ipv6_list *route_ipv6_list;
+    struct route_ipv6_list *route_ipv6_list; //路由信息列表。请参阅--route命令行选项。
 
     /* --status file */
     struct status_output *status_output;
@@ -383,7 +382,7 @@ struct context_2
     struct event_timeout route_wakeup_expire;
 
     /* did we open tun/tap dev during this cycle? */
-    bool did_open_tun;
+    bool did_open_tun; //并不表示是否打开tun/tap设备，而是说明此次打开是创建新的dev,还是复用之前的
 
     /*
      * Event loop info
@@ -420,7 +419,7 @@ struct context_2
     bool es_owned;
 
     /* don't wait for TUN/TAP/UDP to be ready to accept write */
-    bool fast_io;
+    bool fast_io; //不要等待 TUN/TAP/UDP 可写
 
 #if P2MP
 
@@ -445,9 +444,9 @@ struct context_2
 #define CAS_SUCCEEDED 0
 #define CAS_PENDING   1
 #define CAS_FAILED    2
-#define CAS_PARTIAL   3  /* at least one client-connect script/plugin
+#define CAS_PARTIAL   3  /* at least one client-connect script/plugin //至少有一个client-connect脚本/插件成功，而链中的后一个脚本/插件失败
                           * succeeded while a later one in the chain failed */
-    int context_auth;
+    int context_auth; //客户端认证状态
 #endif /* if P2MP_SERVER */
 
     struct event_timeout push_request_interval;

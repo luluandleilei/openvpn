@@ -28,16 +28,12 @@
 #include "sig.h"
 #include "perf.h"
 
-/*
- * rwflags passed to event_ctl and returned by
- * struct event_set_return.
- */
+//传递给event_ctl和从struct event_set_return返回的rwflags
 #define EVENT_UNDEF    4
 #define EVENT_READ     (1<<0)
 #define EVENT_WRITE    (1<<1)
-/*
- * Initialization flags passed to event_set_init
- */
+
+//传递给event_set_init的初始化标志
 #define EVENT_METHOD_US_TIMEOUT   (1<<0)
 #define EVENT_METHOD_FAST         (1<<1)
 

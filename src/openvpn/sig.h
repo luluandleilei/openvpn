@@ -29,8 +29,8 @@
 
 
 
-#define SIG_SOURCE_SOFT 0
-#define SIG_SOURCE_HARD 1
+#define SIG_SOURCE_SOFT 0 //程序主动产生的信号，用于利用信号机制，做处理
+#define SIG_SOURCE_HARD 1 //程序接收到的外部信号
 /* CONNECTION_FAILED is also a "soft" status,
  * It is thrown if a connection attempt fails
  */
@@ -43,7 +43,7 @@
 struct signal_info
 {
     volatile int signal_received;
-    volatile int source;
+    volatile int source; //信号类型: SIG_SOURCE_SOFT, SIG_SOURCE_HARD
     const char *signal_text;
 };
 

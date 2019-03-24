@@ -63,7 +63,6 @@ struct user_pass
 {
     bool defined;
     bool nocache;
-    bool tokenized; /* true if password has been substituted by a token */
     bool wait_for_push; /* true if this object is waiting for a push-reply */
 
 /* max length of username/password */
@@ -142,7 +141,8 @@ void fail_user_pass(const char *prefix,
 
 void purge_user_pass(struct user_pass *up, const bool force);
 
-void set_auth_token(struct user_pass *up, const char *token);
+void set_auth_token(struct user_pass *up, struct user_pass *tk,
+                    const char *token);
 
 /*
  * Process string received by untrusted peer before
@@ -162,12 +162,6 @@ const char *sanitize_control_message(const char *str, struct gc_arena *gc);
 #ifdef ENABLE_IPROUTE
 extern const char *iproute_path;
 #endif
-
-#define COMPAT_FLAG_QUERY         0       /** compat_flags operator: Query for a flag */
-#define COMPAT_FLAG_SET           (1<<0)  /** compat_flags operator: Set a compat flag */
-#define COMPAT_NAMES              (1<<1)  /** compat flag: --compat-names set */
-#define COMPAT_NO_NAME_REMAPPING  (1<<2)  /** compat flag: --compat-names without char remapping */
-bool compat_flag(unsigned int flag);
 
 #if P2MP_SERVER
 /* helper to parse peer_info received from multi client, validate

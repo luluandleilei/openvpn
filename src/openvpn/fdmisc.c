@@ -64,7 +64,7 @@ set_cloexec_action(int fd)
     return true;
 }
 
-/* Set a file descriptor to non-blocking */
+//将文件描述符设置为非阻塞
 void
 set_nonblock(int fd)
 {
@@ -74,7 +74,7 @@ set_nonblock(int fd)
     }
 }
 
-/* Set a file descriptor to not be passed across execs */
+//将文件描述符设置为不在execs之间传递
 void
 set_cloexec(int fd)
 {

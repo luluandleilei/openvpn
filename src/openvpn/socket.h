@@ -99,7 +99,7 @@ struct link_socket_actual
 #endif
 };
 
-/* IP addresses which are persistant across SIGUSR1s */
+/* IP addresses which are persistent across SIGUSR1s */
 struct link_socket_addr
 {
     struct addrinfo *bind_local;
@@ -137,7 +137,7 @@ struct stream_buf
     int len;   /* -1 if not yet known */
 
     bool error; /* if true, fatal TCP error has occurred,
-                *  requiring that connection be restarted */
+                 *  requiring that connection be restarted */
 #if PORT_SHARE
 #define PS_DISABLED 0
 #define PS_ENABLED  1
@@ -171,6 +171,7 @@ struct link_socket
     unsigned int rwflags_debug;
 
     /* used for long-term queueing of pre-accepted socket listen */
+	//表示TCP SERVER模式下的监听套接字已经添加到事件驱动机制中
     bool listen_persistent_queued;
 
     const char *remote_host;
@@ -503,18 +504,18 @@ bool unix_socket_get_peer_uid_gid(const socket_descriptor_t sd, int *uid, int *g
  * DNS resolution
  */
 
-#define GETADDR_RESOLVE               (1<<0)
+#define GETADDR_RESOLVE               (1<<0)	//表示进行域名解析(在地址转换失败时)
 #define GETADDR_FATAL                 (1<<1)
-#define GETADDR_HOST_ORDER            (1<<2)
+#define GETADDR_HOST_ORDER            (1<<2)	//将地址转为主机字节序，仅对ipv4有效
 #define GETADDR_MENTION_RESOLVE_RETRY (1<<3)
-#define GETADDR_FATAL_ON_SIGNAL       (1<<4)
-#define GETADDR_WARN_ON_SIGNAL        (1<<5)
-#define GETADDR_MSG_VIRT_OUT          (1<<6)
+#define GETADDR_FATAL_ON_SIGNAL       (1<<4)	//DNS解析时,收到的信号, 发送FATAL级别消息
+#define GETADDR_WARN_ON_SIGNAL        (1<<5)	//DNS解析时,收到的信号, 发送WARN级别消息
+#define GETADDR_MSG_VIRT_OUT          (1<<6)	//DNS解析时,通过msg_status_output回调输出消息
 #define GETADDR_TRY_ONCE              (1<<7)
 #define GETADDR_UPDATE_MANAGEMENT_STATE (1<<8)
 #define GETADDR_RANDOMIZE             (1<<9)
-#define GETADDR_PASSIVE               (1<<10)
-#define GETADDR_DATAGRAM              (1<<11)
+#define GETADDR_PASSIVE               (1<<10)	//表示调用者将在bind()函数调用中使用返回的地址结构。当此标志不置位时，表示将在connect()函数调用中使用。
+#define GETADDR_DATAGRAM              (1<<11)   //XXX: 指定返回的addrinfo适用于数据报套接口
 
 #define GETADDR_CACHE_MASK              (GETADDR_DATAGRAM|GETADDR_PASSIVE)
 

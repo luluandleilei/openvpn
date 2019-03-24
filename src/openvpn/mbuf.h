@@ -43,7 +43,7 @@ struct multi_instance;
 struct mbuf_buffer
 {
     struct buffer buf;
-    int refcount;
+    int refcount; //该对象的引用计数
 
 #define MF_UNICAST (1<<0)
     unsigned int flags;
@@ -57,11 +57,11 @@ struct mbuf_item
 
 struct mbuf_set
 {
-    unsigned int head;
+    unsigned int head;		//对头起始位置
     unsigned int len;
-    unsigned int capacity;
-    unsigned int max_queued;
-    struct mbuf_item *array;
+    unsigned int capacity;	//队列最大长度
+    unsigned int max_queued;	
+    struct mbuf_item *array; //循环队列
 };
 
 struct mbuf_set *mbuf_init(unsigned int size);

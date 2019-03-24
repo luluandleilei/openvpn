@@ -453,6 +453,7 @@ __attribute__ ((format(__printf__, 3, 4)))
  */
 bool
 openvpn_swprintf(wchar_t *const str, const size_t size, const wchar_t *const format, ...);
+
 /*
  * Unlike in openvpn_snprintf, we cannot use format attributes since
  * GCC doesn't support wprintf as archetype.
@@ -846,6 +847,13 @@ buf_read_u32(struct buffer *buf, bool *good)
         }
         return ntohl(ret);
     }
+}
+
+/** Return true if buffer contents are equal */
+static inline bool
+buf_equal(const struct buffer *a, const struct buffer *b)
+{
+    return BLEN(a) == BLEN(b) && 0 == memcmp(BPTR(a), BPTR(b), BLEN(a));
 }
 
 /**

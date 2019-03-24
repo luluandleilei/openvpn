@@ -91,10 +91,14 @@
  * Packet geometry parameters.
  */
 struct frame {
+	//通过外部网络接口发送的最大数据包大小
+	//an upper bound on the size of UDP packets which are sent between OpenVPN peers
     int link_mtu;               /* Maximum packet size to be sent over the external network interface. */
 
+	//外部网络接口的动态MTU值
     int link_mtu_dynamic;       /* Dynamic MTU value for the external network interface. */
 
+	//所有处理步骤可以添加的最大字节数。
     int extra_frame;            /**< Maximum number of bytes that all
                                  *   processing steps together could add.
                                  *   @code
@@ -110,6 +114,7 @@ struct frame {
                                  *   space for worst-case expansion of
                                  *   incompressible content. */
 
+	//从虚拟tun/tap网络接口读取或写入时可能超出tun/tap MTU的最大字节数
     int extra_tun;              /**< Maximum number of bytes in excess of
                                  *   the tun/tap MTU that might be read
                                  *   from or written to the virtual
@@ -165,6 +170,7 @@ struct options;
  * Max size of a payload packet after encryption, compression, etc.
  * overhead is added.
  */
+//累加加密，压缩等开销后的有效负载数据包的最大大小。
 #define EXPANDED_SIZE(f)         ((f)->link_mtu)
 #define EXPANDED_SIZE_DYNAMIC(f) ((f)->link_mtu_dynamic)
 #define EXPANDED_SIZE_MIN(f)     (TUN_MTU_MIN + TUN_LINK_DELTA(f))

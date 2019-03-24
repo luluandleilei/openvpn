@@ -58,9 +58,9 @@
 /*
  * Special tags passed to event.[ch] functions
  */
-#define MTCP_SOCKET      ((void *)1)
-#define MTCP_TUN         ((void *)2)
-#define MTCP_SIG         ((void *)3) /* Only on Windows */
+#define MTCP_SOCKET      ((void *)1)	//用于标识TCP监听套接字的事件
+#define MTCP_TUN         ((void *)2)	//用于标识TUN/TAP设备描述符的事件
+#define MTCP_SIG         ((void *)3) 	//仅限Windows
 #ifdef ENABLE_MANAGEMENT
 #define MTCP_MANAGEMENT ((void *)4)
 #endif
@@ -138,7 +138,7 @@ multi_create_instance_tcp(struct multi_context *m)
 
         he = hash_lookup_fast(hash, bucket, &mi->real, hv);
 
-        if (he)
+        if (he) //XXX:multi_create_instance中将mi添加到m->iter中重复已经报错？此处不会出现这种情况？
         {
             struct multi_instance *oldmi = (struct multi_instance *) he->value;
             msg(D_MULTI_LOW, "MULTI TCP: new incoming client address matches existing client address -- new client takes precedence");
@@ -197,6 +197,7 @@ multi_tcp_instance_specific_free(struct multi_instance *mi)
     mbuf_free(mi->tcp_link_out_deferred);
 }
 
+//select事件驱动机制有最大并发连接数限制(FD_SETSIZE), 会影响最大客户端数目
 struct multi_tcp *
 multi_tcp_init(int maxevents, int *maxclients)
 {
@@ -239,6 +240,7 @@ multi_tcp_free(struct multi_tcp *mtcp)
     }
 }
 
+//将mi的已连接套接字从事件驱动机制中移除
 void
 multi_tcp_dereference_instance(struct multi_tcp *mtcp, struct multi_instance *mi)
 {
@@ -247,9 +249,10 @@ multi_tcp_dereference_instance(struct multi_tcp *mtcp, struct multi_instance *mi
     {
         event_del(mtcp->es, socket_event_handle(ls));
     }
-    mtcp->n_esr = 0;
+    mtcp->n_esr = 0; //XXX: ???
 }
 
+//将mi的已连接套接字添加到事件驱动机制中
 static inline void
 multi_tcp_set_global_rw_flags(struct multi_context *m, struct multi_instance *mi)
 {
@@ -811,7 +814,7 @@ tunnel_server_tcp(struct context *top)
         status = multi_tcp_wait(&multi.top, multi.mtcp);
         MULTI_CHECK_SIG(&multi);
 
-        /* check on status of coarse timers */
+      	//检查粗定时器的状态
         multi_process_per_second_timers(&multi);
 
         /* timeout? */

@@ -28,35 +28,18 @@ set_lladdr(const char *ifname, const char *lladdr,
 
 #if defined(TARGET_LINUX)
 #ifdef ENABLE_IPROUTE
-    argv_printf(&argv,
-                "%s link set addr %s dev %s",
-                iproute_path, lladdr, ifname);
+    argv_printf(&argv, "%s link set addr %s dev %s", iproute_path, lladdr, ifname);
 #else
-    argv_printf(&argv,
-                "%s %s hw ether %s",
-                IFCONFIG_PATH,
-                ifname, lladdr);
+    argv_printf(&argv, "%s %s hw ether %s", IFCONFIG_PATH, ifname, lladdr);
 #endif
 #elif defined(TARGET_SOLARIS)
-    argv_printf(&argv,
-                "%s %s ether %s",
-                IFCONFIG_PATH,
-                ifname, lladdr);
+    argv_printf(&argv, "%s %s ether %s", IFCONFIG_PATH, ifname, lladdr);
 #elif defined(TARGET_OPENBSD)
-    argv_printf(&argv,
-                "%s %s lladdr %s",
-                IFCONFIG_PATH,
-                ifname, lladdr);
+    argv_printf(&argv, "%s %s lladdr %s", IFCONFIG_PATH, ifname, lladdr);
 #elif defined(TARGET_DARWIN)
-    argv_printf(&argv,
-                "%s %s lladdr %s",
-                IFCONFIG_PATH,
-                ifname, lladdr);
+    argv_printf(&argv, "%s %s lladdr %s", IFCONFIG_PATH, ifname, lladdr);
 #elif defined(TARGET_FREEBSD)
-    argv_printf(&argv,
-                "%s %s ether %s",
-                IFCONFIG_PATH,
-                ifname, lladdr);
+    argv_printf(&argv, "%s %s ether %s", IFCONFIG_PATH, ifname, lladdr);
 #else  /* if defined(TARGET_LINUX) */
     msg(M_WARN, "Sorry, but I don't know how to configure link layer addresses on this operating system.");
     return -1;

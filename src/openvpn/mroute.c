@@ -304,10 +304,7 @@ mroute_extract_addr_ether(struct mroute_addr *src,
     return ret;
 }
 
-/*
- * Translate a struct openvpn_sockaddr (osaddr)
- * to a struct mroute_addr (addr).
- */
+//将struct openvpn_sockaddr（osaddr）转换为struct mroute_addr（addr）。
 bool
 mroute_extract_openvpn_sockaddr(struct mroute_addr *addr,
                                 const struct openvpn_sockaddr *osaddr,
@@ -477,6 +474,13 @@ mroute_addr_print_ex(const struct mroute_addr *ma,
                 {
                     buf_printf(&out, "%s", print_in_addr_t(maddr.v4mappedv6.addr,
                                                            IA_NET_ORDER, gc));
+                    /* we only print port numbers for v4mapped v6 as of
+                     * today, because "v6addr:port" is too ambiguous
+                     */
+                    if (maddr.type & MR_WITH_PORT)
+                    {
+                        buf_printf(&out, ":%d", ntohs(maddr.v6.port));
+                    }
                 }
                 else
                 {

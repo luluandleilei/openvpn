@@ -102,6 +102,8 @@ schedule_add_entry(struct schedule *s,
                    const struct timeval *tv,
                    unsigned int sigma)
 {
+	//如果e->tv 与新值tv之间的差值小于sigma微秒，
+	//则使用之前的计时器值：这允许最小化数操作。
     if (!IN_TREE(e) || !sigma || !tv_within_sigma(tv, &e->tv, sigma))
     {
         e->tv = *tv;

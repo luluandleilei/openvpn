@@ -271,7 +271,7 @@ int read_key(struct key *key, const struct key_type *kt, struct buffer *buf);
  * @param authname    The name of the HMAC digest to use
  * @param keysize     The length of the cipher key to use, in bytes.  Only valid
  *                    for ciphers that support variable length keys.
- * @param tls_mode    Specifies wether we are running in TLS mode, which allows
+ * @param tls_mode    Specifies whether we are running in TLS mode, which allows
  *                    more ciphers than static key mode.
  * @param warn        Print warnings when null cipher / auth is used.
  */
@@ -287,7 +287,9 @@ void init_key_ctx(struct key_ctx *ctx, const struct key *key,
 
 void free_key_ctx(struct key_ctx *ctx);
 
-void init_key_ctx_bi(struct key_ctx_bi *ctx, const struct key2 *key2, int key_direction, const struct key_type *kt, const char *name);
+void init_key_ctx_bi(struct key_ctx_bi *ctx, const struct key2 *key2,
+                     int key_direction, const struct key_type *kt,
+                     const char *name);
 
 void free_key_ctx_bi(struct key_ctx_bi *ctx);
 
@@ -389,6 +391,28 @@ void crypto_adjust_frame_parameters(struct frame *frame,
 /** Return the worst-case OpenVPN crypto overhead (in bytes) */
 unsigned int crypto_max_overhead(void);
 
+/**
+ * Generate a server key with enough randomness to fill a key struct
+ * and write to file.
+ *
+ * @param filename          Filename of the server key file to create.
+ * @param pem_name          The name to use in the PEM header/footer.
+ */
+void
+write_pem_key_file(const char *filename, const char *pem_name);
+
+/**
+ * Read key material from a PEM encoded files into the key structure
+ * @param key           the key structure that will hold the key material
+ * @param pem_name      the name used in the pem encoding start/end lines
+ * @param key_file      name of the file to read
+ * @param key_inline    a string holding the data in case of an inline key
+ * @return              true if reading into key was successful
+ */
+bool
+read_pem_key_file(struct buffer *key, const char *pem_name,
+                  const char *key_file, const char *key_inline);
+
 /* Minimum length of the nonce used by the PRNG */
 #define NONCE_SECRET_LEN_MIN 16
 
@@ -470,7 +494,8 @@ memcmp_constant_time(const void *a, const void *b, size_t size)
     int ret = 0;
     size_t i;
 
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < size; i++)
+    {
         ret |= *a1++ ^ *b1++;
     }
 

@@ -46,7 +46,7 @@ array_mult_safe(const size_t m1, const size_t m2, const size_t extra)
     unsigned long long res = (unsigned long long)m1 * (unsigned long long)m2 + (unsigned long long)extra;
     if (unlikely(m1 > limit) || unlikely(m2 > limit) || unlikely(extra > limit) || unlikely(res > (unsigned long long)limit))
     {
-        msg(M_FATAL, "attemped allocation of excessively large array");
+        msg(M_FATAL, "attempted allocation of excessively large array");
     }
     return (size_t) res;
 }
@@ -312,7 +312,7 @@ openvpn_snprintf(char *str, size_t size, const char *format, ...)
 
 /*
  * openvpn_swprintf() is currently only used by Windows code paths
- * and when enabled for all platforms it will currently break older 
+ * and when enabled for all platforms it will currently break older
  * OpenBSD versions lacking vswprintf(3) support in their libc.
  */
 
@@ -474,7 +474,7 @@ x_gc_freespecial(struct gc_arena *a)
 }
 
 void
-gc_addspecial(void *addr, void(free_function)(void *), struct gc_arena *a)
+gc_addspecial(void *addr, void (free_function)(void *), struct gc_arena *a)
 {
     ASSERT(a);
     struct gc_entry_special *e;

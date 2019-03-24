@@ -1932,8 +1932,7 @@ script_depr_failed:
 
             setenv_str(mi->context.c2.es, "script_type", "client-connect");
 
-            dc_file = platform_create_temp_file(mi->context.options.tmp_dir,
-                                                "cc", &gc);
+            dc_file = platform_create_temp_file(mi->context.options.tmp_dir, "cc", &gc);
             if (!dc_file)
             {
                 cc_succeeded = false;
@@ -2151,10 +2150,7 @@ multi_process_file_closed(struct multi_context *m, const unsigned int mpp_flags)
 }
 #endif /* ifdef ENABLE_ASYNC_PUSH */
 
-/*
- * Add a mbuf buffer to a particular
- * instance.
- */
+//将mbuf_buffer缓冲区添加到特定实例。
 void
 multi_add_mbuf(struct multi_context *m,
                struct multi_instance *mi,
@@ -2332,6 +2328,7 @@ multi_process_post(struct multi_context *m, struct multi_instance *mi, const uns
 
         /* figure timeouts and fetch possible outgoing
          * to_link packets (such as ping or TLS control) */
+        //计算超时时间并获取可能的传出to_link数据包（例如ping或TLS控制）
         pre_select(&mi->context);
 
 #if defined(ENABLE_ASYNC_PUSH) && defined(ENABLE_DEF_AUTH)
@@ -2383,7 +2380,7 @@ multi_process_post(struct multi_context *m, struct multi_instance *mi, const uns
         multi_set_pending(m, ANY_OUT(&mi->context) ? mi : NULL);
 
 #ifdef MULTI_DEBUG_EVENT_LOOP
-        printf("POST %s[%d] to=%d lo=%d/%d w=%"PRIi64"/%ld\n",
+        printf("POST %s[%d] to=%d lo=%d/%d w=%" PRIi64 "/%ld\n",
                id(mi),
                (int) (mi == m->pending),
                mi ? mi->context.c2.to_tun.len : -1,
@@ -2749,15 +2746,12 @@ multi_process_incoming_tun(struct multi_context *m, const unsigned int mpp_flags
         printf("TUN -> TCP/UDP [%d]\n", BLEN(&m->top.c2.buf));
 #endif
 
-        if (m->pending)
+        if (m->pending) //XXX: 为什么有pending直接返回？
         {
             return true;
         }
 
-        /*
-         * Route an incoming tun/tap packet to
-         * the appropriate multi_instance object.
-         */
+        //将tun/tap传入的数据包路由到相应的multi_instance对象。
 
         mroute_flags = mroute_extract_addr_from_packet(&src,
                                                        &dest,
@@ -2844,7 +2838,7 @@ multi_get_queue(struct mbuf_set *ms)
 
     if (mbuf_extract_item(ms, &item)) /* cleartext IP packet */
     {
-        unsigned int pip_flags = PIPV4_PASSTOS;
+        unsigned int pip_flags = PIPV4_PASSTOS | PIPV6_IMCP_NOHOST_SERVER;
 
         set_prefix(item.instance);
         item.instance->context.c2.buf = item.buffer->buf;
@@ -3015,7 +3009,7 @@ void
 multi_top_init(struct multi_context *m, const struct context *top)
 {
     inherit_context_top(&m->top, top);
-    m->top.c2.buffers = init_context_buffers(&top->c2.frame);
+    m->top.c2.buffers = init_context_buffers(&top->c2.frame); //XXX:  c->c2.buffers_owned = true;这一句遗漏了
 }
 
 void

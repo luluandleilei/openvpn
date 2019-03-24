@@ -163,20 +163,20 @@ openvpn_main(int argc, char *argv[])
 
     /* signify first time for components which can
      * only be initialized once per program instantiation. */
+    //为那些只能最初程序启动时执行初始化的组件
     c.first_time = true;
 
-    /* initialize program-wide statics */
+    //初始化程序全局范围的静态数据
     if (init_static())
     {
-        /*
-         * This loop is initially executed on startup and then once per SIGHUP.
-         */
+        //此循环最初在启动时执行，然后每收到一次SIGHUP信号执行一次。
         do
         {
             /* enter pre-initialization mode with regard to signal handling */
+			//进入关于信号处理的预初始化模式
             pre_init_signal_catch();
 
-            /* zero context struct but leave first_time member alone */
+			//清零context结构但仅保留first_time成员的值
             context_clear_all_except_first_time(&c);
 
             /* static signal info object */

@@ -696,7 +696,7 @@ are used.
 
 If the
 .B ipv6only
-keyword is present OpenVPN will bind only to IPv6 (as oposed
+keyword is present OpenVPN will bind only to IPv6 (as opposed
 to IPv6 and IPv4) when a IPv6 socket is opened.
 
 .\"*********************************************************
@@ -1241,6 +1241,43 @@ you know what you're doing.
 .B \-\-redirect\-private [flags]
 Like \-\-redirect\-gateway, but omit actually changing the default
 gateway.  Useful when pushing private subnets.
+.\"*********************************************************
+.TP
+.B \-\-block\-ipv6
+On the client, instead of sending IPv6 packets over the VPN tunnel, all
+IPv6 packets are answered with an ICMPv6 no route host message. On the
+server, all IPv6 packets from clients are answered with an ICMPv6
+no route to host message. This options is intended for cases when IPv6
+should be blocked and other options are not available.
+\.B \-\-block\-ipv6
+will use the remote IPv6 as source address of the ICMPv6 packets if set,
+otherwise will use fe80::7 as source address.
+
+For this option to make sense you actually have to route traffic to the tun
+interface. The following example config block would send all IPv6 traffic to
+OpenVPN and answer all requests with no route to host, effectively blocking
+IPv6.
+
+# client config
+.br
+.B \-\-ifconfig-ipv6
+fd15:53b6:dead::2/64  fd15:53b6:dead::1
+.br
+.B \-\-redirect\-gateway
+ipv6
+.br
+.B \-\-block\-ipv6
+
+# Server config, push a "valid" ipv6 config to the client and block
+# on the server
+.br
+.B \-\-push
+"ifconfig-ipv6 fd15:53b6:dead::2/64  fd15:53b6:dead::1"
+.br
+.B \-\-push
+"redirect\-gateway ipv6"
+.br
+.B \-\-block\-ipv6
 .\"*********************************************************
 .TP
 .B \-\-tun\-mtu n
@@ -2184,7 +2221,7 @@ that
 is parsed on the command line even though
 the daemonization point occurs later.  If one of the
 .B \-\-log
-options is present, it will supercede syslog
+options is present, it will supersede syslog
 redirection.
 
 The optional
@@ -2295,7 +2332,7 @@ If
 already exists it will be truncated.
 This option takes effect
 immediately when it is parsed in the command line
-and will supercede syslog output if
+and will supersede syslog output if
 .B \-\-daemon
 or
 .B \-\-inetd
@@ -2780,7 +2817,7 @@ or outside this directory.
 DEFAULT_DIR is replaced by the default plug\-in directory,
 which is configured at the build time of OpenVPN.  CWD is the
 current directory where OpenVPN was started or the directory
-OpenVPN have swithed into via the
+OpenVPN have switched into via the
 .B \-\-cd
 option before the
 .B \-\-plugin
@@ -3067,7 +3104,7 @@ IV_LZO_STUB=1 \-\- if client was built with LZO stub capability
 
 IV_LZ4=1 \-\- if the client supports LZ4 compressions.
 
-IV_PROTO=2 \-\- if the client supports peer\-id floating mechansim
+IV_PROTO=2 \-\- if the client supports peer\-id floating mechanism
 
 IV_NCP=2 \-\- negotiable ciphers, client supports
 .B \-\-cipher
@@ -3799,77 +3836,6 @@ For
 authentication, use
 the authenticated username as the common name,
 rather than the common name from the client cert.
-.\"*********************************************************
-.TP
-.B \-\-compat\-names [no\-remapping]
-.B DEPRECATED
-This option will be removed in OpenVPN 2.5
-
-Until OpenVPN v2.3 the format of the X.509 Subject fields was formatted
-like this:
-.IP
-.B
-/C=US/L=Somewhere/CN=John Doe/emailAddress=john@example.com
-.IP
-In addition the old behaviour was to remap any character other than
-alphanumeric, underscore ('_'), dash ('\-'), dot ('.'), and slash ('/') to
-underscore ('_').  The X.509 Subject string as returned by the
-.B tls_id
-environmental variable, could additionally contain colon (':') or equal ('=').
-.IP
-When using the
-.B \-\-compat\-names
-option, this old formatting and remapping will be re\-enabled again.  This is
-purely implemented for compatibility reasons when using older plug\-ins or
-scripts which does not handle the new formatting or UTF\-8 characters.
-.IP
-In OpenVPN 2.3 the formatting of these fields changed into a more
-standardised format.  It now looks like:
-.IP
-.B
-C=US, L=Somewhere, CN=John Doe, emailAddress=john@example.com
-.IP
-The new default format in OpenVPN 2.3 also does not do the character remapping
-which happened earlier.  This new format enables proper support for UTF\-8
-characters in the usernames, X.509 Subject fields and Common Name variables and
-it complies to the RFC 2253, UTF\-8 String Representation of Distinguished
-Names.
-
-The
-.B no\-remapping
-mode flag can be used with the
-.B
-\-\-compat\-names
-option to be compatible with the now deprecated \-\-no\-name\-remapping option.
-It is only available at the server. When this mode flag is used, the Common Name,
-Subject, and username strings are allowed to include any printable character
-including space, but excluding control characters such as tab, newline, and
-carriage\-return. no\-remapping is only available on the server side.
-
-.B Please note:
-This option is immediately deprecated.  It is only implemented
-to make the transition to the new formatting less intrusive.  It will be
-removed in OpenVPN 2.5.  So please update your scripts/plug\-ins where necessary.
-.\"*********************************************************
-.TP
-.B \-\-no\-name\-remapping
-.B DEPRECATED
-This option will be removed in OpenVPN 2.5
-
-The
-.B \-\-no\-name\-remapping
-option is an alias for
-.B \-\-compat\-names\ no\-remapping.
-It ensures compatibility with server configurations using the
-.B \-\-no\-name\-remapping
-option.
-
-.B Please note:
-This option is now deprecated.  It will be removed in OpenVPN 2.5.
-So please make sure you support the new X.509 name formatting
-described with the
-.B \-\-compat\-names
-option as soon as possible.
 .\"*********************************************************
 .TP
 .B \-\-port\-share host port [dir]
@@ -4968,7 +4934,7 @@ Warning!
 .B \-\-tls\-cipher
 and
 .B \-\-tls\-ciphersuites
-are expert features, which \- if used correcly \- can improve the security of
+are expert features, which \- if used correctly \- can improve the security of
 your VPN connection.  But it is also easy to unwittingly use them to carefully
 align a gun with your foot, or just break your connection.  Use with care!
 
@@ -5262,6 +5228,91 @@ degrading to the same security as using
 That is, the control channel still benefits from the extra protection against
 active man\-in\-the\-middle\-attacks and DoS attacks, but may no longer offer
 extra privacy and post\-quantum security on top of what TLS itself offers.
+
+For large setups or setups where clients are not trusted, consider using
+.B \-\-tls\-crypt\-v2
+instead.  That uses per\-client unique keys, and thereby improves the bounds to
+\fR'rotate a client key at least once per 8000 years'.
+.\"*********************************************************
+.TP
+.B \-\-tls\-crypt\-v2 keyfile
+
+Use client\-specific tls\-crypt keys.
+
+For clients,
+.B keyfile
+is a client\-specific tls\-crypt key.  Such a key can be generated using the
+.B \-\-tls\-crypt\-v2\-genkey
+option.
+
+For servers,
+.B keyfile
+is used to unwrap client\-specific keys supplied by the client during connection
+setup.  This key must be the same as the key used to generate the
+client\-specific key (see
+.B \-\-tls\-crypt\-v2\-genkey\fR).
+
+On servers, this option can be used together with the
+.B \-\-tls\-auth
+or
+.B \-\-tls\-crypt
+option.  In that case, the server will detect whether the client is using
+client\-specific keys, and automatically select the right mode.
+.\"*********************************************************
+.TP
+.B \-\-tls\-crypt\-v2\-genkey client|server keyfile [metadata]
+
+If the first parameter equals "server", generate a \-\-tls\-crypt\-v2 server
+key and store the key in
+.B keyfile\fR.
+
+
+If the first parameter equals "client", generate a \-\-tls\-crypt\-v2 client
+key, and store the key in
+.B keyfile\fR.
+
+If supplied, include the supplied
+.B metadata
+in the wrapped client key.  This metadata must be supplied in base64\-encoded
+form.  The metadata must be at most 735 bytes long (980 bytes in base64).
+
+If no metadata is supplied, OpenVPN will use a 64\-bit unix timestamp
+representing the current time in UTC, encoded in network order, as metadata for
+the generated key.
+
+A tls\-crypt\-v2 client key is wrapped using a server key.  To generate a
+client key, the user must therefore supply the server key using the
+.B \-\-tls\-crypt\-v2
+option.
+
+Servers can use
+.B \-\-tls\-crypt\-v2\-verify
+to specify a metadata verification command.
+.\"*********************************************************
+.TP
+.B \-\-tls\-crypt\-v2\-verify cmd
+
+Run command
+.B cmd
+to verify the metadata of the client\-specific tls\-crypt\-v2 key of a
+connecting client.  This allows server administrators to reject client
+connections, before exposing the TLS stack (including the notoriously dangerous
+X.509 and ASN.1 stacks) to the connecting client.
+
+OpenVPN supplies the following env vars to the command:
+.RS
+.IP \[bu] 2
+script_type is set to "tls\-crypt\-v2\-verify"
+.IP \[bu]
+metadata_type is set to "0" if the metadata was user supplied, or "1" if it's a
+64\-bit unix timestamp representing the key creation time.
+.IP \[bu]
+metadata_file contains the filename of a temporary file that contains the client
+metadata.
+.RE
+
+.IP
+The command can reject the connection by exiting with a non-zero exit code.
 .\"*********************************************************
 .TP
 .B \-\-askpass [file]
@@ -5361,6 +5412,12 @@ into the file/buffer for dynamic configuration data.  This
 will then make the OpenVPN server to push this value to the
 client, which replaces the local password with the
 UNIQUE_TOKEN_VALUE.
+
+Newer clients (2.4.7+) will fall back to the original password method
+after a failed auth. Older clients will keep using the token value
+and react according to
+.B \-\-auth-retry
+.
 .\"*********************************************************
 .TP
 .B \-\-tls\-verify cmd
@@ -5391,7 +5448,7 @@ is executed two arguments are appended after any arguments specified in
 .B cmd certificate_depth subject
 
 These arguments are, respectively, the current certificate depth and
-the X509 common name (cn) of the peer.
+the X509 subject distinguished name (dn) of the peer.
 
 This feature is useful if the peer you want to trust has a certificate
 which was signed by a certificate authority who also signed many
@@ -6168,7 +6225,15 @@ into OpenVPN's ``tun''.  The gateway parameter is only used for
 IPv6 routes across ``tap'' devices, and if missing, the ``ipv6remote''
 field from
 .B \-\-ifconfig\-ipv6
+or
+.B \-\-route\-ipv6\-gateway
 is used.
+.TP
+.B \-\-route\-ipv6\-gateway gw
+Specify a default gateway
+.B gw
+for use with
+.B \-\-route\-ipv6.
 .TP
 .B \-\-server\-ipv6 ipv6addr/bits
 convenience\-function to enable a number of IPv6 related options at
@@ -6907,9 +6972,10 @@ X509_1_C=KG
 .SH INLINE FILE SUPPORT
 OpenVPN allows including files in the main configuration for the
 .B \-\-ca, \-\-cert, \-\-dh, \-\-extra\-certs, \-\-key, \-\-pkcs12, \-\-secret,
-.B \-\-crl\-verify, \-\-http\-proxy\-user\-pass, \-\-tls\-auth
+.B \-\-crl\-verify, \-\-http\-proxy\-user\-pass, \-\-tls\-auth,
+.B \-\-tls\-crypt,
 and
-.B \-\-tls\-crypt
+.B \-\-tls\-crypt-v2
 options.
 
 Each inline file started by the line

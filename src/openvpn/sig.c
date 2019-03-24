@@ -242,9 +242,9 @@ pre_init_signal_catch(void)
     signal_mode = SM_PRE_INIT;
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
-    signal(SIGHUP, SIG_IGN);
-    signal(SIGUSR1, SIG_IGN);
-    signal(SIGUSR2, SIG_IGN);
+    signal(SIGHUP, SIG_IGN); //在必要的初始化没有完成时，忽略这些信号
+    signal(SIGUSR1, SIG_IGN); //在必要的初始化没有完成时，忽略这些信号
+    signal(SIGUSR2, SIG_IGN); //在必要的初始化没有完成时，忽略这些信号
     signal(SIGPIPE, SIG_IGN);
 #endif /* HAVE_SIGNAL_H */
 }
@@ -256,9 +256,9 @@ post_init_signal_catch(void)
     signal_mode = SM_POST_INIT;
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
-    signal(SIGHUP, signal_handler);
-    signal(SIGUSR1, signal_handler);
-    signal(SIGUSR2, signal_handler);
+    signal(SIGHUP, signal_handler);	//在必要的初始化完成后才能处理这些信号
+    signal(SIGUSR1, signal_handler); //在必要的初始化完成后才能处理这些信号
+    signal(SIGUSR2, signal_handler); //在必要的初始化完成后才能处理这些信号
     signal(SIGPIPE, SIG_IGN);
 #endif /* HAVE_SIGNAL_H */
 }

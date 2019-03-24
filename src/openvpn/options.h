@@ -87,10 +87,10 @@ struct connection_entry
 {
     int proto;
     sa_family_t af;
-    const char *local_port;
+    const char *local_port; //本地TCP/UDP端口号或名称。
     bool local_port_defined;
-    const char *remote_port;
-    const char *local;
+    const char *remote_port; //远程主机名或IP地址。
+    const char *local; //用于绑定(bind)的本地主机名或IP地址。 如果指定，OpenVPN将仅绑定到此地址。 如果未指定，OpenVPN将绑定到所有接口。
     const char *remote;
     bool remote_float;
     bool bind_defined;
@@ -139,6 +139,11 @@ struct connection_entry
     /* Shared secret used for TLS control channel authenticated encryption */
     const char *tls_crypt_file;
     const char *tls_crypt_inline;
+
+    /* Client-specific secret or server key used for TLS control channel
+     * authenticated encryption v2 */
+    const char *tls_crypt_v2_file;
+    const char *tls_crypt_v2_inline;
 };
 
 struct remote_entry
@@ -193,7 +198,7 @@ struct options
 
     /* persist parms */
     bool persist_config;
-    int persist_mode;
+    int persist_mode; //1: 设置TUNSETPERSIST标志， 0: 清除TUNSETPERSIST标志
 
     const char *key_pass_file;
     bool show_ciphers;
@@ -338,6 +343,7 @@ struct options
     const char *route_script;
     const char *route_predown_script;
     const char *route_default_gateway;
+    const char *route_ipv6_default_gateway;
     int route_default_metric;
     bool route_noexec;
     int route_delay;
@@ -345,6 +351,7 @@ struct options
     bool route_delay_defined;
     struct route_option_list *routes;
     struct route_ipv6_option_list *routes_ipv6;                 /* IPv6 */
+    bool block_ipv6;
     bool route_nopull;
     bool route_gateway_via_dhcp;
     bool allow_pull_fqdn; /* as a client, allow server to push a FQDN for certain parameters */
@@ -461,7 +468,7 @@ struct options
 #endif /* if P2MP_SERVER */
 
     bool client;
-    bool pull; /* client pull of config options from server */
+    bool pull; //客户端从服务端拉取配置选项
     int push_continuation;
     unsigned int push_option_types_found;
     const char *auth_user_pass_file;
@@ -576,6 +583,17 @@ struct options
     /* Shared secret used for TLS control channel authenticated encryption */
     const char *tls_crypt_file;
     const char *tls_crypt_inline;
+
+    /* Client-specific secret or server key used for TLS control channel
+     * authenticated encryption v2 */
+    const char *tls_crypt_v2_file;
+    const char *tls_crypt_v2_inline;
+
+    const char *tls_crypt_v2_genkey_type;
+    const char *tls_crypt_v2_genkey_file;
+    const char *tls_crypt_v2_metadata;
+
+    const char *tls_crypt_v2_verify_script;
 
     /* Allow only one session */
     bool single_session;

@@ -80,4 +80,4 @@ check_ping_send(struct context *c)
     }
 }
 
-#endif
+#endif /* ifndef PING_H */

@@ -904,15 +904,12 @@ key_is_zero(struct key *key, const struct key_type *kt)
         {
             return false;
         }
-	}
-
+    }
     msg(D_CRYPT_ERRORS, "CRYPTO INFO: WARNING: zero key detected");
     return true;
 }
 
-/*
- * Make sure that cipher key is a valid key for current key_type.
- */
+//确保密码key是当前key_type的有效密钥。
 bool
 check_key(struct key *key, const struct key_type *kt)
 {
@@ -952,6 +949,7 @@ check_key(struct key *key, const struct key_type *kt)
  * key.  You must always call check_key after this routine
  * to make sure.
  */
+//此例程不能保证它会生成一个好的密钥, 在此例程之后, 您必须始终调用check_key以确保。
 void
 fixup_key(struct key *key, const struct key_type *kt)
 {
@@ -994,10 +992,8 @@ check_replay_consistency(const struct key_type *kt, bool packet_id)
     }
 }
 
-/*
- * Generate a random key.  If key_type is provided, make
- * sure generated key is valid for key_type.
- */
+//生成随机密钥。
+//如果提供了key_type，请确保生成的密钥对key_type有效
 void
 generate_key_random(struct key *key, const struct key_type *kt)
 {
@@ -1250,7 +1246,9 @@ read_key_file(struct key2 *key2, const char *file, const unsigned int flags)
     {
         in = buffer_read_from_file(file, &gc);
         if (!buf_valid(&in))
+        {
             msg(M_FATAL, "Read error on key file ('%s')", file);
+        }
 
         size = in.len;
     }
@@ -1436,7 +1434,7 @@ write_key_file(const int nkeys, const char *filename)
     buf_printf(&out, "%s\n", static_key_foot);
 
     /* write key file, now formatted in out, to file */
-    if(!buffer_write_file(filename, &out))
+    if (!buffer_write_file(filename, &out))
     {
         nbits = -1;
     }
@@ -1664,7 +1662,9 @@ prng_reset_nonce(void)
     {
         int i;
         for (i = 0; i < size; ++i)
+        {
             nonce_data[i] = (uint8_t) i;
+        }
     }
 #endif
 }
@@ -1728,7 +1728,7 @@ prng_bytes(uint8_t *output, int len)
     }
 }
 
-/* an analogue to the random() function, but use prng_bytes */
+//与random()函数类似，但使用prng_bytes
 long int
 get_random(void)
 {
@@ -1745,7 +1745,7 @@ void
 print_cipher(const cipher_kt_t *cipher)
 {
     const char *var_key_size = cipher_kt_var_key_size(cipher) ?
-        " by default" : "";
+                               " by default" : "";
 
     printf("%s  (%d bit key%s, ",
            translate_cipher_name_to_openvpn(cipher_kt_name(cipher)),
@@ -1813,4 +1813,77 @@ translate_cipher_name_to_openvpn(const char *cipher_name)
     }
 
     return pair->openvpn_name;
+}
+
+void
+write_pem_key_file(const char *filename, const char *pem_name)
+{
+    struct gc_arena gc = gc_new();
+    struct key server_key = { 0 };
+    struct buffer server_key_buf = clear_buf();
+    struct buffer server_key_pem = clear_buf();
+
+    if (!rand_bytes((void *)&server_key, sizeof(server_key)))
+    {
+        msg(M_NONFATAL, "ERROR: could not generate random key");
+        goto cleanup;
+    }
+    buf_set_read(&server_key_buf, (void *)&server_key, sizeof(server_key));
+    if (!crypto_pem_encode(pem_name, &server_key_pem,
+                           &server_key_buf, &gc))
+    {
+        msg(M_WARN, "ERROR: could not PEM-encode key");
+        goto cleanup;
+    }
+
+    if (!buffer_write_file(filename, &server_key_pem))
+    {
+        msg(M_ERR, "ERROR: could not write key file");
+        goto cleanup;
+    }
+
+cleanup:
+    secure_memzero(&server_key, sizeof(server_key));
+    buf_clear(&server_key_pem);
+    gc_free(&gc);
+    return;
+}
+
+bool
+read_pem_key_file(struct buffer *key, const char *pem_name,
+                  const char *key_file, const char *key_inline)
+{
+    bool ret = false;
+    struct buffer key_pem = { 0 };
+    struct gc_arena gc = gc_new();
+
+    if (strcmp(key_file, INLINE_FILE_TAG))
+    {
+        key_pem = buffer_read_from_file(key_file, &gc);
+        if (!buf_valid(&key_pem))
+        {
+            msg(M_WARN, "ERROR: failed to read %s file (%s)",
+                pem_name, key_file);
+            goto cleanup;
+        }
+    }
+    else
+    {
+        buf_set_read(&key_pem, (const void *)key_inline, strlen(key_inline) + 1);
+    }
+
+    if (!crypto_pem_decode(pem_name, key, &key_pem))
+    {
+        msg(M_WARN, "ERROR: %s pem decode failed", pem_name);
+        goto cleanup;
+    }
+
+    ret = true;
+cleanup:
+    if (strcmp(key_file, INLINE_FILE_TAG))
+    {
+        buf_clear(&key_pem);
+    }
+    gc_free(&gc);
+    return ret;
 }

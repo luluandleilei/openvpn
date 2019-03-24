@@ -255,7 +255,7 @@ schedule_remove_node(struct schedule *s, struct schedule_entry *e)
     {
         if (e->lt)
         {
-            if (e->gt)
+            if (e->gt) //既有左孩子又有右孩子，比较pri字段
             {
                 if (e->lt->pri < e->gt->pri)
                 {
@@ -266,12 +266,12 @@ schedule_remove_node(struct schedule *s, struct schedule_entry *e)
                     schedule_rotate_up(s, e->gt);
                 }
             }
-            else
+            else //仅有右孩子
             {
                 schedule_rotate_up(s, e->lt);
             }
         }
-        else if (e->gt)
+        else if (e->gt)  //仅有左孩子
         {
             schedule_rotate_up(s, e->gt);
         }

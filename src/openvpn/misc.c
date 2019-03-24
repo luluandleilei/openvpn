@@ -466,7 +466,7 @@ purge_user_pass(struct user_pass *up, const bool force)
      * don't show warning if the pass has been replaced by a token: this is an
      * artificial "auth-nocache"
      */
-    else if (!warn_shown && (!up->tokenized))
+    else if (!warn_shown)
     {
         msg(M_WARN, "WARNING: this configuration may cache passwords in memory -- use the auth-nocache option to prevent this");
         warn_shown = true;
@@ -474,14 +474,18 @@ purge_user_pass(struct user_pass *up, const bool force)
 }
 
 void
-set_auth_token(struct user_pass *up, const char *token)
+set_auth_token(struct user_pass *up, struct user_pass *tk, const char *token)
 {
-    if (token && strlen(token) && up && up->defined && !up->nocache)
+
+    if (token && strlen(token) && up && up->defined)
     {
-        CLEAR(up->password);
-        strncpynt(up->password, token, USER_PASS_LEN);
-        up->tokenized = true;
+        strncpynt(tk->password, token, USER_PASS_LEN);
+        strncpynt(tk->username, up->username, USER_PASS_LEN);
+        tk->defined = true;
     }
+
+    /* Cleans user/pass for nocache */
+    purge_user_pass(up, false);
 }
 
 /*
@@ -661,29 +665,6 @@ sanitize_control_message(const char *src, struct gc_arena *gc)
     }
     *dest = '\0';
     return ret;
-}
-
-/**
- * Will set or query for a global compat flag.  To modify the compat flags
- * the COMPAT_FLAG_SET must be bitwise ORed together with the flag to set.
- * If no "operator" flag is given it defaults to COMPAT_FLAG_QUERY,
- * which returns the flag state.
- *
- * @param  flag  Flag to be set/queried for bitwise ORed with the operator flag
- * @return Returns 0 if the flag is not set, otherwise the 'flag' value is returned
- */
-bool
-compat_flag(unsigned int flag)
-{
-    static unsigned int compat_flags = 0;
-
-    if (flag & COMPAT_FLAG_SET)
-    {
-        compat_flags |= (flag >> 1);
-    }
-
-    return (compat_flags & (flag >> 1));
-
 }
 
 #if P2MP_SERVER

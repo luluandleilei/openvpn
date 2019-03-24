@@ -80,10 +80,12 @@ void check_incoming_control_channel_dowork(struct context *c);
 void check_scheduled_exit_dowork(struct context *c);
 
 void check_push_request_dowork(struct context *c);
+
 #endif /* P2MP */
 
 #ifdef ENABLE_FRAGMENT
 void check_fragment_dowork(struct context *c);
+
 #endif /* ENABLE_FRAGMENT */
 
 void check_connection_established_dowork(struct context *c);
@@ -284,13 +286,44 @@ void process_outgoing_tun(struct context *c);
 
 /**************************************************************************/
 
-bool send_control_channel_string(struct context *c, const char *str, int msglevel);
+/*
+ * Send a string to remote over the TLS control channel.
+ * Used for push/pull messages, passing username/password,
+ * etc.
+ * @param c          - The context structure of the VPN tunnel associated with
+ *                     the packet.
+ * @param str        - The message to be sent
+ * @param msglevel   - Message level to use for logging
+ */
+bool
+send_control_channel_string(struct context *c, const char *str, int msglevel);
 
-#define PIPV4_PASSTOS         (1<<0)
-#define PIP_MSSFIX            (1<<1)         /* v4 and v6 */
-#define PIPV4_OUTGOING        (1<<2)
-#define PIPV4_EXTRACT_DHCP_ROUTER (1<<3)
-#define PIPV4_CLIENT_NAT      (1<<4)
+/*
+ * Send a string to remote over the TLS control channel.
+ * Used for push/pull messages, passing username/password,
+ * etc.
+ *
+ * This variant does not schedule the actual sending of the message
+ * The caller needs to ensure that it is scheduled or call
+ * send_control_channel_string
+ *
+ * @param multi      - The tls_multi structure of the VPN tunnel associated
+ *                     with the packet.
+ * @param str        - The message to be sent
+ * @param msglevel   - Message level to use for logging
+ */
+
+bool
+send_control_channel_string_dowork(struct tls_multi *multi,
+                                   const char *str, int msglevel);
+
+#define PIPV4_PASSTOS                   (1<<0)
+#define PIP_MSSFIX                      (1<<1)         /* v4 and v6 */
+#define PIP_OUTGOING                    (1<<2)
+#define PIPV4_EXTRACT_DHCP_ROUTER       (1<<3)
+#define PIPV4_CLIENT_NAT                (1<<4)
+#define PIPV6_IMCP_NOHOST_CLIENT        (1<<5)
+#define PIPV6_IMCP_NOHOST_SERVER        (1<<6)
 
 void process_ip_header(struct context *c, unsigned int flags, struct buffer *buf);
 
@@ -349,6 +382,7 @@ p2p_iow_flags(const struct context *c)
  * This is the core I/O wait function, used for all I/O waits except
  * for TCP in server mode.
  */
+ //这是核心I/O等待功能，用于除TCP服务器模式下之外的所有I/O等待。
 static inline void
 io_wait(struct context *c, const unsigned int flags)
 {

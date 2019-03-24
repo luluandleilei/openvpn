@@ -552,8 +552,7 @@ plugin_call_item(const struct plugin *p,
                                                         p->plugin_handle,
                                                         per_client_context,
                                                         (current_cert ? certdepth : -1),
-                                                        current_cert
-            };
+                                                        current_cert };
 
             struct openvpn_plugin_args_func_return retargs;
 
@@ -574,10 +573,7 @@ plugin_call_item(const struct plugin *p,
             ASSERT(0);
         }
 
-        msg(D_PLUGIN, "PLUGIN_CALL: POST %s/%s status=%d",
-            p->so_pathname,
-            plugin_type_name(type),
-            status);
+        msg(D_PLUGIN, "PLUGIN_CALL: POST %s/%s status=%d", p->so_pathname, plugin_type_name(type), status);
 
         if (status == OPENVPN_PLUGIN_FUNC_ERROR)
         {

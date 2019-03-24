@@ -78,7 +78,7 @@ struct mroute_addr {
     uint8_t len;    /* length of address */
     uint8_t unused;
     uint8_t type;   /* MR_ADDR/MR_WITH flags */
-    uint8_t netbits; /* number of bits in network part of address,
+    uint8_t netbits; /* number of bits in network part of address, //地址中网络号占用的位数，仅在设置了MR_WITH_NETBITS标志才有效
                       * valid if MR_WITH_NETBITS is set */
     union {
         uint8_t raw_addr[MR_MAX_ADDR_LEN]; /* actual address */

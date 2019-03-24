@@ -194,12 +194,18 @@ struct key_state
 struct tls_wrap_ctx
 {
     enum {
-        TLS_WRAP_NONE = 0, /* No control channel wrapping */
-        TLS_WRAP_AUTH,  /* Control channel authentication */
-        TLS_WRAP_CRYPT, /* Control channel encryption and authentication */
-    } mode;                     /* Control channel wrapping mode */
-    struct crypto_options opt;  /* Crypto state */
-    struct buffer work;         /* Work buffer (only for --tls-crypt) */
+        TLS_WRAP_NONE = 0, /**< No control channel wrapping */
+        TLS_WRAP_AUTH,  /**< Control channel authentication */
+        TLS_WRAP_CRYPT, /**< Control channel encryption and authentication */
+    } mode;                     /**< Control channel wrapping mode */
+    struct crypto_options opt;  /**< Crypto state */
+    struct buffer work;         /**< Work buffer (only for --tls-crypt) */
+    struct key_ctx tls_crypt_v2_server_key;  /**< Decrypts client keys */
+    const struct buffer *tls_crypt_v2_wkc;   /**< Wrapped client key,
+                                              *   sent to server */
+    struct buffer tls_crypt_v2_metadata;     /**< Received from client */
+    bool cleanup_key_ctx;                    /**< opt.key_ctx_bi is owned by
+                                              *   this context */
 };
 
 /*
@@ -271,6 +277,9 @@ struct tls_options
     const char *config_ciphername;	/* Data channel cipher from config file? */
     const char *config_authname;
     bool ncp_enabled;
+
+    bool tls_crypt_v2;
+    const char *tls_crypt_v2_verify_script;
 
     /** TLS handshake wrapping state */
     struct tls_wrap_ctx tls_wrap;

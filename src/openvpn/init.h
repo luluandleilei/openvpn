@@ -30,7 +30,8 @@
  * Baseline maximum number of events
  * to wait for.
  */
-#define BASE_N_EVENTS 4
+//基线最大等待事件数
+#define BASE_N_EVENTS 4 //tun, listen socket, proxy,?
 
 void context_clear(struct context *c);
 

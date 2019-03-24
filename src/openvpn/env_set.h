@@ -40,8 +40,8 @@ struct env_item {
 };
 
 struct env_set {
-    struct gc_arena *gc;
-    struct env_item *list;
+    struct gc_arena *gc; //所有env_item对象将从该gc上分配
+    struct env_item *list; //环境变量项的列表
 };
 
 /* set/delete environmental variable */
@@ -94,13 +94,15 @@ void env_set_print(int msglevel, const struct env_set *es);
 void env_set_inherit(struct env_set *es, const struct env_set *src);
 
 /* returns true if environmental variable name starts with 'password' */
-static inline bool is_password_env_var(const char *str)
+static inline bool
+is_password_env_var(const char *str)
 {
     return (strncmp(str, "password", 8) == 0);
 }
 
 /* returns true if environmental variable safe to print to log */
-static inline bool env_safe_to_print(const char *str)
+static inline bool
+env_safe_to_print(const char *str)
 {
 #ifndef UNSAFE_DEBUG
     if (is_password_env_var(str))

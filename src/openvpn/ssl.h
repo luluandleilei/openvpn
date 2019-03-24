@@ -63,9 +63,12 @@
 #define P_CONTROL_HARD_RESET_CLIENT_V2 7     /* initial key from client, forget previous state */
 #define P_CONTROL_HARD_RESET_SERVER_V2 8     /* initial key from server, forget previous state */
 
+/* indicates key_method >= 2 and client-specific tls-crypt key */
+#define P_CONTROL_HARD_RESET_CLIENT_V3 10    /* initial key from client, forget previous state */
+
 /* define the range of legal opcodes */
 #define P_FIRST_OPCODE                 1
-#define P_LAST_OPCODE                  9
+#define P_LAST_OPCODE                  10
 
 /*
  * Set the max number of acknowledgments that can "hitch a ride" on an outgoing
@@ -433,6 +436,8 @@ void ssl_set_auth_token(const char *token);
  */
 void ssl_purge_auth_challenge(void);
 
+bool ssl_clean_auth_token(void);
+
 void ssl_put_auth_challenge(const char *cr_str);
 
 #endif
@@ -520,6 +525,24 @@ bool tls_item_in_cipher_list(const char *item, const char *list);
  * inline functions
  */
 
+/** Free the elements of a tls_wrap_ctx structure */
+static inline void
+tls_wrap_free(struct tls_wrap_ctx *tls_wrap)
+{
+    if (packet_id_initialized(&tls_wrap->opt.packet_id))
+    {
+        packet_id_free(&tls_wrap->opt.packet_id);
+    }
+
+    if (tls_wrap->cleanup_key_ctx)
+    {
+        free_key_ctx_bi(&tls_wrap->opt.key_ctx_bi);
+    }
+
+    free_buf(&tls_wrap->tls_crypt_v2_metadata);
+    free_buf(&tls_wrap->work);
+}
+
 static inline bool
 tls_initial_packet_received(const struct tls_multi *multi)
 {
@@ -603,6 +626,8 @@ void delayed_auth_pass_purge(void);
  * @param cipher_list_tls13 list of allowed TLS 1.3+ cipher, or NULL
  * @param tls_cert_profile  TLS certificate crypto profile name.
  */
-void show_available_tls_ciphers(const char *cipher_list, const char *cipher_list_tls13, const char *tls_cert_profile);
-
+void
+show_available_tls_ciphers(const char *cipher_list,
+                           const char *cipher_list_tls13,
+                           const char *tls_cert_profile);
 #endif /* ifndef OPENVPN_SSL_H */

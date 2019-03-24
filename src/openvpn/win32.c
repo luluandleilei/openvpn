@@ -22,7 +22,7 @@
  */
 
 /*
- * Win32-specific OpenVPN code, targetted at the mingw
+ * Win32-specific OpenVPN code, targeted at the mingw
  * development environment.
  */
 
@@ -1088,7 +1088,7 @@ wide_cmd_line(const struct argv *a, struct gc_arena *gc)
 int
 openvpn_execve(const struct argv *a, const struct env_set *es, const unsigned int flags)
 {
-    int ret = -1;
+    int ret = OPENVPN_EXECVE_ERROR;
     static bool exec_warn = false;
 
     if (a && a->argv[0])
@@ -1137,10 +1137,14 @@ openvpn_execve(const struct argv *a, const struct env_set *es, const unsigned in
             free(env);
             gc_free(&gc);
         }
-        else if (!exec_warn && (script_security() < SSEC_SCRIPTS))
+        else
         {
-            msg(M_WARN, SCRIPT_SECURITY_WARNING);
-            exec_warn = true;
+            ret = OPENVPN_EXECVE_NOT_ALLOWED;
+            if (!exec_warn && (script_security() < SSEC_SCRIPTS))
+            {
+                msg(M_WARN, SCRIPT_SECURITY_WARNING);
+                exec_warn = true;
+            }
         }
     }
     else
@@ -1481,7 +1485,7 @@ send_msg_iservice(HANDLE pipe, const void *data, size_t size,
         || !ReadFile(pipe, ack, sizeof(*ack), &len, NULL))
     {
         msg(M_WARN, "%s: could not talk to service: %s [%lu]",
-            context? context : "Unknown",
+            context ? context : "Unknown",
             strerror_win32(GetLastError(), &gc), GetLastError());
         ret = false;
     }

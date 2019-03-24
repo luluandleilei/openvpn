@@ -131,27 +131,27 @@ struct tuntap_options {
 struct tuntap
 {
 #define TUNNEL_TYPE(tt) ((tt) ? ((tt)->type) : DEV_TYPE_UNDEF)
-    int type; /* DEV_TYPE_x as defined in proto.h */
+    int type; //隧道类型, 在proto.h中定义的 DEV_TYPE_x 类型的值
 
 #define TUNNEL_TOPOLOGY(tt) ((tt) ? ((tt)->topology) : TOP_UNDEF)
-    int topology; /* one of the TOP_x values */
+    int topology; //TUN拓扑, 在proto.h中定义的 TOP_x 类型的值
 
-    bool did_ifconfig_setup;
-    bool did_ifconfig_ipv6_setup;
+    bool did_ifconfig_setup; //表示是否已经设置执行ifconfig命令所需要的参数(local, remote_netmask, broadcast)
+    bool did_ifconfig_ipv6_setup; //表示是否已经设置执行ifconfig ipv6命令所需要的参数(local_ipv6, remote_ipv6, netbits_ipv6)
 
     bool persistent_if;         /* if existed before, keep on program end */
 
     struct tuntap_options options; /* options set on command line */
 
-    char *actual_name; /* actual name of TUN/TAP dev, usually including unit number */
+    char *actual_name;	//TUN/TAP设备的实际名称(虚拟网卡的名称)，通常包括单元号
 
     /* number of TX buffers */
     int txqueuelen;
 
     /* ifconfig parameters */
-    in_addr_t local;
-    in_addr_t remote_netmask;
-    in_addr_t broadcast;
+    in_addr_t local; //虚拟网卡ip地址
+    in_addr_t remote_netmask; //拓扑结构为p2p时为虚拟网卡对端ip地址，拓扑结构为subnet时为虚拟网卡子网掩码
+    in_addr_t broadcast; //虚拟网卡广播地址，仅对TAP-style 的设备有效
 
     struct in6_addr local_ipv6;
     struct in6_addr remote_ipv6;
@@ -176,7 +176,7 @@ struct tuntap
 
     int standby_iter;
 #else  /* ifdef _WIN32 */
-    int fd; /* file descriptor for TUN/TAP dev */
+    int fd; //TUN/TAP设备的文件描述符
 #endif
 
 #ifdef TARGET_SOLARIS
@@ -186,8 +186,8 @@ struct tuntap
 #ifdef HAVE_NET_IF_UTUN_H
     bool is_utun;
 #endif
-    /* used for printing status info only */
-    unsigned int rwflags_debug;
+
+    unsigned int rwflags_debug; //仅用于打印状态信息
 
     /* Some TUN/TAP drivers like to be ioctled for mtu
      * after open */
@@ -283,6 +283,7 @@ tun_adjust_frame_parameters(struct frame *frame, int size)
  * Should ifconfig be called before or after
  * tun dev open?
  */
+//ifconfig应该在tun设备被open之前还是之后调用？
 
 #define IFCONFIG_BEFORE_TUN_OPEN 0
 #define IFCONFIG_AFTER_TUN_OPEN  1
@@ -510,7 +511,7 @@ tun_set(struct tuntap *tt, struct event_set *es, unsigned int rwflags, void *arg
 {
     if (tuntap_defined(tt))
     {
-        /* if persistent is defined, call event_ctl only if rwflags has changed since last call */
+		//如果定义了persistent，则仅在自上次调用后rwflags发生更改时才调用event_ctl
         if (!persistent || *persistent != rwflags)
         {
             event_ctl(es, tun_event_handle(tt), rwflags, arg);

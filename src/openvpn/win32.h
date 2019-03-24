@@ -27,6 +27,7 @@
 
 #include "mtu.h"
 #include "openvpn-msg.h"
+#include "argv.h"
 
 /* location of executables */
 #define SYS_PATH_ENV_VAR_NAME "SystemRoot"  /* environmental variable name that normally contains the system path */
@@ -36,7 +37,7 @@
 #define WIN_NET_PATH_SUFFIX "\\system32\\net.exe"
 
 /*
- * Win32-specific OpenVPN code, targetted at the mingw
+ * Win32-specific OpenVPN code, targeted at the mingw
  * development environment.
  */
 
@@ -315,6 +316,12 @@ const char *win32_version_string(struct gc_arena *gc, bool add_name);
  */
 bool send_msg_iservice(HANDLE pipe, const void *data, size_t size,
                        ack_message_t *ack, const char *context);
+
+/*
+ * Attempt to simulate fork/execve on Windows
+ */
+int
+openvpn_execve(const struct argv *a, const struct env_set *es, const unsigned int flags);
 
 #endif /* ifndef OPENVPN_WIN32_H */
 #endif /* ifdef _WIN32 */

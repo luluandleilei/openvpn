@@ -83,7 +83,7 @@ get_addr_generic(sa_family_t af, unsigned int flags, const char *hostname,
     char *endp, *sep, *var_host = NULL;
     struct addrinfo *ai = NULL;
     unsigned long bits;
-    uint8_t max_bits;
+    uint8_t max_bits; //子网掩码的最大位数
     int ret = -1;
 
     if (!hostname)
@@ -99,10 +99,12 @@ get_addr_generic(sa_family_t af, unsigned int flags, const char *hostname,
             bits = 0;
             max_bits = sizeof(in_addr_t) * 8;
             break;
+
         case AF_INET6:
             bits = 64;
             max_bits = sizeof(struct in6_addr) * 8;
             break;
+
         default:
             msg(M_WARN,
                 "Unsupported AF family passed to getaddrinfo for %s (%d)",
@@ -110,11 +112,8 @@ get_addr_generic(sa_family_t af, unsigned int flags, const char *hostname,
             goto out;
     }
 
-    /* we need to modify the hostname received as input, but we don't want to
-     * touch it directly as it might be a constant string.
-     *
-     * Therefore, we clone the string here and free it at the end of the
-     * function */
+    //我们需要修改作为输入收到的hostname，但我们不想直接修改它，因为它可能是一个常量字符串。
+    //因此，我们在这里克隆字符串并在函数结尾处释放它
     var_host = strdup(hostname);
     if (!var_host)
     {
@@ -123,8 +122,8 @@ get_addr_generic(sa_family_t af, unsigned int flags, const char *hostname,
         goto out;
     }
 
-    /* check if this hostname has a /bits suffix */
-    sep = strchr(var_host , '/');
+	//检查此hostname是否具有 /bits 后缀
+    sep = strchr(var_host, '/');
     if (sep)
     {
         bits = strtoul(sep + 1, &endp, 10);
@@ -155,10 +154,12 @@ get_addr_generic(sa_family_t af, unsigned int flags, const char *hostname,
                     *ip4 = ntohl(*ip4);
                 }
                 break;
+
             case AF_INET6:
                 ip6 = network;
                 *ip6 = ((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr;
                 break;
+
             default:
                 /* can't get here because 'af' was previously checked */
                 msg(M_WARN,
@@ -256,7 +257,7 @@ get_cached_dns_entry(struct cached_dns_entry *dns_cache, const char *hostname,
     struct cached_dns_entry *ph;
     int flags;
 
-    /* Only use flags that are relevant for the structure */
+	//仅使用与该结构相关的标志
     flags = resolve_flags & GETADDR_CACHE_MASK;
 
     for (ph = dns_cache; ph; ph = ph->next)
@@ -403,6 +404,8 @@ err:
  * Translate IPv4/IPv6 addr or hostname into struct addrinfo
  * If resolve error, try again for resolve_retry_seconds seconds.
  */
+//将IPv4/IPv6地址或主机名转换为struct addrinfo
+//如果解析错误，请再次尝试resolve_retry_seconds秒。
 int
 openvpn_getaddrinfo(unsigned int flags, const char *hostname, const char *servname,
 		int resolve_retry_seconds, volatile int *signal_received, int ai_family, struct addrinfo **res)
@@ -602,10 +605,7 @@ done:
     return status;
 }
 
-/*
- * We do our own inet_aton because the glibc function
- * isn't very good about error checking.
- */
+//我们自己实现了一个inet_aton, 因为glibc函数对错误检查做得不是很好。
 int
 openvpn_inet_aton(const char *dotted_quad, struct in_addr *addr)
 {
@@ -934,7 +934,7 @@ link_socket_update_buffer_sizes(struct link_socket *ls, int rcvbuf, int sndbuf)
 }
 
 /*
- * SOCKET INITALIZATION CODE.
+ * SOCKET INITIALIZATION CODE.
  * Create a TCP/UDP socket
  */
 
@@ -964,6 +964,7 @@ create_socket_tcp(struct addrinfo *addrinfo)
 
     /* set socket file descriptor to not pass across execs, so that
      * scripts don't have access to it */
+    //将套接字文件描述符设置为不传递给exec，以便脚本无权访问它
     set_cloexec(sd);
 
     return sd;
@@ -1755,7 +1756,7 @@ link_socket_init_phase1(struct link_socket *sock,
         sock->info.af = accept_from->info.af;
     }
 
-    /* are we running in HTTP proxy mode? */
+    //我们是在HTTP代理模式下运行吗？
     if (sock->http_proxy)
     {
         ASSERT(sock->info.proto == PROTO_TCP_CLIENT);
@@ -1769,7 +1770,7 @@ link_socket_init_phase1(struct link_socket *sock,
         sock->proxy_dest_host = remote_host;
         sock->proxy_dest_port = remote_port;
     }
-    /* or in Socks proxy mode? */
+	//还是在Socks代理模式下运行？
     else if (sock->socks_proxy)
     {
         ASSERT(!sock->inetd);
@@ -1795,7 +1796,7 @@ link_socket_init_phase1(struct link_socket *sock,
         {
             sock->bind_local = false;
         }
-        else
+        else //LS_MODE_TCP_LISTEN
         {
             sock->bind_local = true;
         }
@@ -2329,7 +2330,7 @@ link_socket_current_remote(const struct link_socket_info *info)
  * by now just ignore it
  *
  * For --remote entries with multiple addresses this
- * only return the actual endpoint we have sucessfully connected to
+ * only return the actual endpoint we have successfully connected to
  */
     if (lsa->actual.dest.addr.sa.sa_family != AF_INET)
     {
@@ -2360,7 +2361,7 @@ link_socket_current_remote_ipv6(const struct link_socket_info *info)
  * for PF_INET6 routes over PF_INET6 endpoints
  *
  * For --remote entries with multiple addresses this
- * only return the actual endpoint we have sucessfully connected to
+ * only return the actual endpoint we have successfully connected to
  */
     if (lsa->actual.dest.addr.sa.sa_family != AF_INET6)
     {
@@ -2755,6 +2756,7 @@ print_link_socket_actual_ex(const struct link_socket_actual *act, const char *se
 /*
  * Convert an in_addr_t in host byte order
  * to an ascii dotted quad.
+ * 将主机字节顺序的in_addr_t转换为ascii点阵四元组。
  */
 const char *
 print_in_addr_t(in_addr_t addr, unsigned int flags, struct gc_arena *gc)
@@ -2952,6 +2954,7 @@ proto_is_net(int proto)
     }
     return proto != PROTO_NONE;
 }
+
 bool
 proto_is_dgram(int proto)
 {
@@ -3067,7 +3070,7 @@ addr_family_name(int af)
  *
  * IPv6 and IPv4 protocols are comptabile but OpenVPN
  * has always sent UDPv4, TCPv4 over the wire. Keep these
- * strings for backward compatbility
+ * strings for backward compatibility
  */
 const char *
 proto_remote(int proto, bool remote)
@@ -3152,7 +3155,7 @@ link_socket_read_tcp(struct link_socket *sock,
 
 #if ENABLE_IP_PKTINFO
 
-/* make the buffer large enough to handle ancilliary socket data for
+/* make the buffer large enough to handle ancillary socket data for
  * both IPv4 and IPv6 destination addresses, plus padding (see RFC 2292)
  */
 #if defined(HAVE_IN_PKTINFO) && defined(HAVE_IPI_SPEC_DST)
@@ -3661,7 +3664,7 @@ socket_finalize(SOCKET s,
         if (ret >= 0 && io->addr_defined)
         {
             /* TODO(jjo): streamline this mess */
-            /* in this func we dont have relevant info about the PF_ of this
+            /* in this func we don't have relevant info about the PF_ of this
              * endpoint, as link_socket_actual will be zero for the 1st received packet
              *
              * Test for inets PF_ possible sizes

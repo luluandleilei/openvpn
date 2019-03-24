@@ -213,7 +213,7 @@ tls_version_max(void)
     return TLS_VER_1_2;
 #elif defined(TLS1_1_VERSION) || defined(SSL_OP_NO_TLSv1_1)
     return TLS_VER_1_1;
-#else
+#else  /* if defined(TLS1_3_VERSION) */
     return TLS_VER_1_0;
 #endif
 }
@@ -316,7 +316,7 @@ tls_ctx_set_options(struct tls_root_ctx *ctx, unsigned int ssl_flags)
 }
 
 void
-convert_tls_list_to_openssl(char* openssl_ciphers, size_t len,const char *ciphers)
+convert_tls_list_to_openssl(char *openssl_ciphers, size_t len,const char *ciphers)
 {
     /* Parse supplied cipher list and pass on to OpenSSL */
     size_t begin_of_cipher, end_of_cipher;
@@ -456,9 +456,10 @@ tls_ctx_restrict_ciphers_tls13(struct tls_root_ctx *ctx, const char *ciphers)
         return;
     }
 
-#if (OPENSSL_VERSION_NUMBER < 0x1010100fL)
-	crypto_msg(M_WARN, "Not compiled with OpenSSL 1.1.1 or higher. "
-			"Ignoring TLS 1.3 only tls-ciphersuites '%s' setting.", ciphers);
+#if !defined(TLS1_3_VERSION)
+    crypto_msg(M_WARN, "Not compiled with OpenSSL 1.1.1 or higher. "
+               "Ignoring TLS 1.3 only tls-ciphersuites '%s' setting.",
+               ciphers);
 #else
     ASSERT(NULL != ctx);
 
@@ -497,13 +498,13 @@ tls_ctx_set_cert_profile(struct tls_root_ctx *ctx, const char *profile)
     {
         msg(M_FATAL, "ERROR: Invalid cert profile: %s", profile);
     }
-#else
+#else  /* ifdef HAVE_SSL_CTX_SET_SECURITY_LEVEL */
     if (profile)
     {
         msg(M_WARN, "WARNING: OpenSSL 1.0.1 does not support --tls-cert-profile"
 			", ignoring user-set profile: '%s'", profile);
     }
-#endif
+#endif /* ifdef HAVE_SSL_CTX_SET_SECURITY_LEVEL */
 }
 
 void
@@ -514,7 +515,8 @@ tls_ctx_check_cert_time(const struct tls_root_ctx *ctx)
 
     ASSERT(ctx);
 
-#if OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(LIBRESSL_VERSION_NUMBER)
+#if (OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(LIBRESSL_VERSION_NUMBER)) \
+    || LIBRESSL_VERSION_NUMBER >= 0x2070000fL
     /* OpenSSL 1.0.2 and up */
     cert = SSL_CTX_get0_certificate(ctx->ctx);
 #else
@@ -549,7 +551,8 @@ tls_ctx_check_cert_time(const struct tls_root_ctx *ctx)
     }
 
 cleanup:
-#if OPENSSL_VERSION_NUMBER < 0x10002000L || defined(LIBRESSL_VERSION_NUMBER)
+#if OPENSSL_VERSION_NUMBER < 0x10002000L \
+    || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x2070000fL)
     SSL_free(ssl);
 #endif
     return;
@@ -643,7 +646,7 @@ tls_ctx_load_ecdh_params(struct tls_root_ctx *ctx, const char *curve_name
         {
             nid = EC_GROUP_get_curve_name(ecgrp);
         }
-#endif
+#endif /* if OPENSSL_VERSION_NUMBER >= 0x10002000L */
     }
 
     /* Translate NID back to name , just for kicks */
@@ -1111,7 +1114,7 @@ rsa_priv_enc(int flen, const unsigned char *from, unsigned char *to, RSA *rsa, i
 
     ret = get_sig_from_man(from, flen, to, len);
 
-    return (ret == len)? ret : -1;
+    return (ret == len) ? ret : -1;
 }
 
 static int
@@ -1183,7 +1186,9 @@ err:
     return 0;
 }
 
-#if OPENSSL_VERSION_NUMBER > 0x10100000L && !defined(OPENSSL_NO_EC) && !defined(LIBRESSL_VERSION_NUMBER)
+#if ((OPENSSL_VERSION_NUMBER > 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)) \
+     || LIBRESSL_VERSION_NUMBER > 0x2090000fL) \
+    && !defined(OPENSSL_NO_EC)
 
 /* called when EC_KEY is destroyed */
 static void
@@ -1299,13 +1304,13 @@ err:
     {
         EVP_PKEY_free(privkey);
     }
-    if(ec)
+    if (ec)
     {
         EC_KEY_free(ec);
     }
     return 0;
 }
-#endif /* OPENSSL_VERSION_NUMBER > 1.1.0 dev */
+#endif /* OPENSSL_VERSION_NUMBER > 1.1.0 dev && !defined(OPENSSL_NO_EC) */
 
 int
 tls_ctx_use_management_external_key(struct tls_root_ctx *ctx)
@@ -1314,7 +1319,8 @@ tls_ctx_use_management_external_key(struct tls_root_ctx *ctx)
 
     ASSERT(NULL != ctx);
 
-#if OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(LIBRESSL_VERSION_NUMBER)
+#if (OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(LIBRESSL_VERSION_NUMBER)) \
+    || LIBRESSL_VERSION_NUMBER >= 0x2070000fL
     /* OpenSSL 1.0.2 and up */
     X509 *cert = SSL_CTX_get0_certificate(ctx->ctx);
 #else
@@ -1336,7 +1342,9 @@ tls_ctx_use_management_external_key(struct tls_root_ctx *ctx)
             goto cleanup;
         }
     }
-#if OPENSSL_VERSION_NUMBER > 0x10100000L && !defined(OPENSSL_NO_EC) && !defined(LIBRESSL_VERSION_NUMBER)
+#if ((OPENSSL_VERSION_NUMBER > 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)) \
+     || LIBRESSL_VERSION_NUMBER > 0x2090000fL) \
+    && !defined(OPENSSL_NO_EC)
     else if (EVP_PKEY_id(pkey) == EVP_PKEY_EC)
     {
         if (!tls_ctx_use_external_ec_key(ctx, pkey))
@@ -1349,17 +1357,18 @@ tls_ctx_use_management_external_key(struct tls_root_ctx *ctx)
         crypto_msg(M_WARN, "management-external-key requires an RSA or EC certificate");
         goto cleanup;
     }
-#else
+#else  /* OPENSSL_VERSION_NUMBER > 1.1.0 dev && !defined(OPENSSL_NO_EC) */
     else
     {
         crypto_msg(M_WARN, "management-external-key requires an RSA certificate");
         goto cleanup;
     }
-#endif /* OPENSSL_VERSION_NUMBER > 1.1.0 dev */
+#endif /* OPENSSL_VERSION_NUMBER > 1.1.0 dev && !defined(OPENSSL_NO_EC) */
 
     ret = 0;
 cleanup:
-#if OPENSSL_VERSION_NUMBER < 0x10002000L || defined(LIBRESSL_VERSION_NUMBER)
+#if OPENSSL_VERSION_NUMBER < 0x10002000L \
+    || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x2070000fL)
     if (ssl)
     {
         SSL_free(ssl);
@@ -1614,7 +1623,7 @@ bio_debug_data(const char *mode, BIO *bio, const uint8_t *buf, int len, const ch
     if (len > 0)
     {
         open_biofp();
-        fprintf(biofp, "BIO_%s %s time=%"PRIi64" bio=" ptr_format " len=%d data=%s\n",
+        fprintf(biofp, "BIO_%s %s time=%" PRIi64 " bio=" ptr_format " len=%d data=%s\n",
                 mode, desc, (int64_t)time(NULL), (ptr_type)bio, len, format_hex(buf, len, 0, &gc));
         fflush(biofp);
     }
@@ -1625,7 +1634,7 @@ static void
 bio_debug_oc(const char *mode, BIO *bio)
 {
     open_biofp();
-    fprintf(biofp, "BIO %s time=%"PRIi64" bio=" ptr_format "\n",
+    fprintf(biofp, "BIO %s time=%" PRIi64 " bio=" ptr_format "\n",
             mode, (int64_t)time(NULL), (ptr_type)bio);
     fflush(biofp);
 }
@@ -1930,7 +1939,7 @@ print_details(struct key_state_ssl *ks_ssl, const char *prefix)
             {
                 EC_KEY *ec = EVP_PKEY_get0_EC_KEY(pkey);
                 const EC_GROUP *group = EC_KEY_get0_group(ec);
-                const char* curve;
+                const char *curve;
 
                 int nid = EC_GROUP_get_curve_name(group);
                 if (nid == 0 || (curve = OBJ_nid2sn(nid)) == NULL)
@@ -1963,7 +1972,7 @@ show_available_tls_ciphers_list(const char *cipher_list, const char *tls_cert_pr
         crypto_msg(M_FATAL, "Cannot create SSL_CTX object");
     }
 
-#if (OPENSSL_VERSION_NUMBER >= 0x1010100fL)
+#if defined(TLS1_3_VERSION)
     if (tls13)
     {
         SSL_CTX_set_min_proto_version(tls_ctx.ctx, TLS1_3_VERSION);
@@ -1984,12 +1993,13 @@ show_available_tls_ciphers_list(const char *cipher_list, const char *tls_cert_pr
         crypto_msg(M_FATAL, "Cannot create SSL object");
     }
 
-#if (OPENSSL_VERSION_NUMBER < 0x1010000fL)
+#if (OPENSSL_VERSION_NUMBER < 0x1010000fL) || \
+    (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER <= 0x2090000fL)
     STACK_OF(SSL_CIPHER) *sk = SSL_get_ciphers(ssl);
 #else
     STACK_OF(SSL_CIPHER) *sk = SSL_get1_supported_ciphers(ssl);
 #endif
-    for (int i=0;i < sk_SSL_CIPHER_num(sk);i++)
+    for (int i = 0; i < sk_SSL_CIPHER_num(sk); i++)
     {
         const SSL_CIPHER *c = sk_SSL_CIPHER_value(sk, i);
 
@@ -2000,7 +2010,7 @@ show_available_tls_ciphers_list(const char *cipher_list, const char *tls_cert_pr
 
         if (tls13)
         {
-              printf("%s\n", cipher_name);
+            printf("%s\n", cipher_name);
         }
         else if (NULL == pair)
         {

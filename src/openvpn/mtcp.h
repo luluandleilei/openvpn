@@ -37,11 +37,11 @@
  */
 struct multi_tcp
 {
-    struct event_set *es;
-    struct event_set_return *esr;
-    int n_esr;
-    int maxevents;
-    unsigned int tun_rwflags;
+    struct event_set *es; //事件驱动机制
+    struct event_set_return *esr; //存储一次wait返回的事件的数组
+    int n_esr; //指明一次wait返回的事件个数
+    int maxevents; //esr数组的长度; 对于select表示最多监听的并发描述符个数(不超过FD_SETSIZE); 对于poll和epoll表示一次wait能够返回的最多事件个数(多余事件可以后续调用wait返回)
+    unsigned int tun_rwflags; //记录上次添加tun描述符到事件驱动中时关注事件，用于比对新添加事件与上次事件不同时，才真的添加到事件驱动机制中
 #ifdef ENABLE_MANAGEMENT
     unsigned int management_persist_flags;
 #endif

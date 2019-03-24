@@ -212,6 +212,8 @@ setenv_route_addr(struct env_set *es, const char *key, const in_addr_t addr, int
     gc_free(&gc);
 }
 
+//status 表示是否找到特殊地址对应的ip地址
+//返回值 表示是否是特殊地址
 static bool
 get_special_addr(const struct route_list *rl,
                  const char *string,
@@ -317,8 +319,8 @@ init_route(struct route_ipv4 *r,
     }
 
 
-    /* get_special_addr replaces specialaddr with a special ip addr
-     * like gw. getaddrinfo is called to convert a a addrinfo struct */
+    //get_special_addr将special addr替换为特殊的ip addr，如gw。
+   	//调用openvpn_getaddrinfo将ip addr转换为addrinfo结构
 
     if (get_special_addr(rl, ro->network, (in_addr_t *) &special.s_addr, &status))
     {
@@ -343,13 +345,8 @@ init_route(struct route_ipv4 *r,
 
     if (is_route_parm_defined(ro->netmask))
     {
-        r->netmask = getaddr(
-            GETADDR_HOST_ORDER
-            | GETADDR_WARN_ON_SIGNAL,
-            ro->netmask,
-            0,
-            &status,
-            NULL);
+        r->netmask = getaddr( GETADDR_HOST_ORDER | GETADDR_WARN_ON_SIGNAL,
+            ro->netmask, 0, &status, NULL);
         if (!status)
         {
             goto fail;
@@ -367,9 +364,7 @@ init_route(struct route_ipv4 *r,
         if (!get_special_addr(rl, ro->gateway, &r->gateway, &status))
         {
             r->gateway = getaddr(
-                GETADDR_RESOLVE
-                | GETADDR_HOST_ORDER
-                | GETADDR_WARN_ON_SIGNAL,
+                GETADDR_RESOLVE | GETADDR_HOST_ORDER | GETADDR_WARN_ON_SIGNAL,
                 ro->gateway,
                 0,
                 &status,
@@ -447,11 +442,6 @@ init_route_ipv6(struct route_ipv6 *r6,
     else if (rl6->spec_flags & RTSA_REMOTE_ENDPOINT)
     {
         r6->gateway = rl6->remote_endpoint_ipv6;
-    }
-    else
-    {
-        msg(M_WARN, PACKAGE_NAME " ROUTE6: " PACKAGE_NAME " needs a gateway parameter for a --route-ipv6 option and no default was specified by either --route-ipv6-gateway or --ifconfig-ipv6 options");
-        goto fail;
     }
 
     /* metric */
@@ -560,7 +550,7 @@ add_block_local_item(struct route_list *rl,
 
         /* split a route into two smaller blocking routes, and direct them to target */
         l2 = ((~gateway->netmask)+1)>>1;
-        r1->flags = RT_DEFINED;
+        r1->flags = RT_DEFINED; //XXX: route_ipv4->metric和route_ipv4->options字段没有设置
         r1->gateway = target;
         r1->network = gateway->addr & gateway->netmask;
         r1->netmask = ~(l2-1);
@@ -581,19 +571,18 @@ add_block_local(struct route_list *rl)
     if ((rl->flags & RG_BLOCK_LOCAL)
         && (rl->rgi.flags & rgi_needed) == rgi_needed
         && (rl->spec.flags & RTSA_REMOTE_ENDPOINT)
-        && rl->spec.remote_host_local != TLA_LOCAL)
-    {
+        && rl->spec.remote_host_local != TLA_LOCAL) //客户端与OpenVPN服务端不在同一个本地子网中
         size_t i;
 
 #ifndef TARGET_ANDROID
-        /* add bypass for gateway addr */
+        //为网关地址添加旁路
         add_bypass_address(&rl->spec.bypass, rl->rgi.gateway.addr);
 #endif
 
-        /* block access to local subnet */
+		//阻止访问本地子网
         add_block_local_item(rl, &rl->rgi.gateway, rl->spec.remote_endpoint);
 
-        /* process additional subnets on gateway interface */
+		//处理网关接口上的其他子网
         for (i = 0; i < rl->rgi.n_addrs; ++i)
         {
             const struct route_gateway_address *gwa = &rl->rgi.addrs[i];
@@ -649,7 +638,7 @@ init_route_list(struct route_list *rl,
 
     if (rl->spec.flags & RTSA_REMOTE_HOST)
     {
-        rl->spec.remote_host_local = test_local_addr(remote_host, &rl->rgi);
+        rl->spec.remote_host_local = test_local_addr(remote_host, &rl->rgi); //TODO: test_local_addr
     }
 
     if (is_route_parm_defined(remote_endpoint))
@@ -686,7 +675,7 @@ init_route_list(struct route_list *rl,
 #endif
     }
 
-    /* parse the routes from opt to rl */
+	//解析路由选项列表为路由项列表
     {
         struct route_option *ro;
         for (ro = opt->routes; ro; ro = ro->next)
@@ -694,7 +683,7 @@ init_route_list(struct route_list *rl,
             struct addrinfo *netlist = NULL;
             struct route_ipv4 r;
 
-            if (!init_route(&r, &netlist, ro, rl))
+            if (!init_route(&r, &netlist, ro, rl)) //XXX:
             {
                 ret = false;
             }
@@ -711,6 +700,8 @@ init_route_list(struct route_list *rl,
                     rl->routes = new;
                 }
             }
+
+			//添加释放addrinfo的回调函数
             if (netlist)
             {
                 gc_addspecial(netlist, &gc_freeaddrinfo_callback, &gc);
@@ -1027,6 +1018,8 @@ redirect_default_route_to_vpn(struct route_list *rl, const struct tuntap *tt, un
                 /* route remote host to original default gateway */
                 /* if remote_host is not ipv4 (ie: ipv6), just skip
                  * adding this special /32 route */
+                //将remote_host路由到原始默认网关
+				//如果remote_host不是ipv4(即：ipv6),则跳过添加此特殊 /32 路由
                 if (rl->spec.remote_host != IPV4_INVALID_ADDR)
                 {
                     add_route3(rl->spec.remote_host,
@@ -1091,7 +1084,7 @@ redirect_default_route_to_vpn(struct route_list *rl, const struct tuntap *tt, un
                 }
             }
 
-            /* set a flag so we can undo later */
+            //设置一个标志，以便我们稍后撤消
             rl->iflags |= RL_DID_REDIRECT_DEFAULT_GATEWAY;
         }
     }
@@ -1585,7 +1578,7 @@ add_route(struct route_ipv4 *r,
     {
         argv_printf_cat(&argv, "metric %d", r->metric);
     }
-    if (is_on_link(is_local_route, flags, rgi))
+    if (is_on_link(is_local_route, flags, rgi)) //TODO: is_on_link
     {
         argv_printf_cat(&argv, "dev %s", rgi->iface);
     }
@@ -1825,7 +1818,7 @@ route_ipv6_clear_host_bits( struct route_ipv6 *r6 )
 {
     /* clear host bit parts of route
      * (needed if routes are specified improperly, or if we need to
-     * explicitely setup/clear the "connected" network routes on some OSes)
+     * explicitly setup/clear the "connected" network routes on some OSes)
      */
     int byte = 15;
     int bits_to_clear = 128 - r6->netbits;
@@ -1879,9 +1872,7 @@ add_route_ipv6(struct route_ipv6 *r6, const struct tuntap *tt, unsigned int flag
     network = print_in6_addr( r6->network, 0, &gc);
     gateway = print_in6_addr( r6->gateway, 0, &gc);
 
-#if defined(TARGET_DARWIN)    \
-    || defined(TARGET_FREEBSD) || defined(TARGET_DRAGONFLY)    \
-    || defined(TARGET_OPENBSD) || defined(TARGET_NETBSD)
+#if defined(TARGET_DARWIN) || defined(TARGET_FREEBSD) || defined(TARGET_DRAGONFLY) || defined(TARGET_OPENBSD) || defined(TARGET_NETBSD)
 
     /* the BSD platforms cannot specify gateway and interface independently,
      * but for link-local destinations, we MUST specify the interface, so
@@ -1915,6 +1906,16 @@ add_route_ipv6(struct route_ipv6 *r6, const struct tuntap *tt, unsigned int flag
         && !( (r6->flags & RT_METRIC_DEFINED) && r6->metric == 0 ) )
     {
         gateway_needed = true;
+    }
+
+    if (gateway_needed && IN6_IS_ADDR_UNSPECIFIED(&r6->gateway))
+    {
+        msg(M_WARN, "ROUTE6 WARNING: " PACKAGE_NAME " needs a gateway "
+            "parameter for a --route-ipv6 option and no default was set via "
+            "--ifconfig-ipv6 or --route-ipv6-gateway option.  Not installing "
+            "IPv6 route to %s/%d.", network, r6->netbits);
+        status = false;
+        goto done;
     }
 
 #if defined(TARGET_LINUX)
@@ -2114,6 +2115,7 @@ add_route_ipv6(struct route_ipv6 *r6, const struct tuntap *tt, unsigned int flag
     msg(M_FATAL, "Sorry, but I don't know how to do 'route ipv6' commands on this operating system.  Try putting your routes in a --route-up script");
 #endif /* if defined(TARGET_LINUX) */
 
+done:
     if (status)
     {
         r6->flags |= RT_ADDED;
@@ -2346,9 +2348,7 @@ delete_route_ipv6(const struct route_ipv6 *r6, const struct tuntap *tt, unsigned
     network = print_in6_addr( r6->network, 0, &gc);
     gateway = print_in6_addr( r6->gateway, 0, &gc);
 
-#if defined(TARGET_DARWIN)    \
-    || defined(TARGET_FREEBSD) || defined(TARGET_DRAGONFLY)    \
-    || defined(TARGET_OPENBSD) || defined(TARGET_NETBSD)
+#if defined(TARGET_DARWIN) || defined(TARGET_FREEBSD) || defined(TARGET_DRAGONFLY) || defined(TARGET_OPENBSD) || defined(TARGET_NETBSD)
 
     /* the BSD platforms cannot specify gateway and interface independently,
      * but for link-local destinations, we MUST specify the interface, so
@@ -3074,7 +3074,7 @@ do_route_ipv6_service(const bool add, const struct route_ipv6 *r, const struct t
      * (only do this for routes actually using the tun/tap device)
      */
     if (tt->type == DEV_TYPE_TUN
-	 && msg.iface.index == tt->adapter_index )
+        && msg.iface.index == tt->adapter_index)
     {
         inet_pton(AF_INET6, "fe80::8", &msg.gateway.ipv6);
     }
@@ -3207,7 +3207,7 @@ get_default_gateway(struct route_gateway_info *rgi)
                         const in_addr_t mask = ntohl(mask_x);
                         const in_addr_t gw = ntohl(gw_x);
 
-                        if (!net && !mask && metric < lowest_metric)
+                        if (!net && !mask && metric < lowest_metric) //
                         {
                             found = true;
                             best_gw = gw;
@@ -3251,14 +3251,14 @@ get_default_gateway(struct route_gateway_info *rgi)
     goto done;
 #endif /* ifndef TARGET_ANDROID */
 
-    /* scan adapter list */
+    //扫描适配器列表
     if (rgi->flags & RGI_ADDR_DEFINED)
     {
         struct ifreq *ifr, *ifend;
         in_addr_t addr, netmask;
         struct ifreq ifreq;
         struct ifconf ifc;
-        struct ifreq ifs[20]; /* Maximum number of interfaces to scan */
+        struct ifreq ifs[20]; //要扫描的最大接口数
 
         if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
         {
@@ -3273,19 +3273,19 @@ get_default_gateway(struct route_gateway_info *rgi)
             goto done;
         }
 
-        /* scan through interface list */
+        //扫描接口列表
         ifend = ifs + (ifc.ifc_len / sizeof(struct ifreq));
         for (ifr = ifc.ifc_req; ifr < ifend; ifr++)
         {
-            if (ifr->ifr_addr.sa_family == AF_INET)
+            if (ifr->ifr_addr.sa_family == AF_INET) //XXX: 为什么仅考虑AF_INET
             {
-                /* get interface addr */
+                //获取接口地址
                 addr = ntohl(((struct sockaddr_in *) &ifr->ifr_addr)->sin_addr.s_addr);
 
-                /* get interface name */
+                //获取接口名称
                 strncpynt(ifreq.ifr_name, ifr->ifr_name, sizeof(ifreq.ifr_name));
 
-                /* check that the interface is up */
+                //检查接口是否已启动
                 if (ioctl(sd, SIOCGIFFLAGS, &ifreq) < 0)
                 {
                     continue;
@@ -3297,8 +3297,7 @@ get_default_gateway(struct route_gateway_info *rgi)
 
                 if (rgi->flags & RGI_ON_LINK)
                 {
-                    /* check that interface name of current interface
-                     * matches interface name of best default route */
+             		//检查当前接口的接口名称是否与最佳默认路由的接口名称匹配
                     if (strcmp(ifreq.ifr_name, best_name))
                     {
                         continue;
@@ -3317,15 +3316,15 @@ get_default_gateway(struct route_gateway_info *rgi)
                 }
                 else
                 {
-                    /* get interface netmask */
+                    //获取接口网络掩码
                     if (ioctl(sd, SIOCGIFNETMASK, &ifreq) < 0)
                     {
                         continue;
                     }
                     netmask = ntohl(((struct sockaddr_in *) &ifreq.ifr_addr)->sin_addr.s_addr);
 
-                    /* check that interface matches default route */
-                    if (((rgi->gateway.addr ^ addr) & netmask) != 0)
+                    //检查接口是否与默认路由匹配
+                    if (((rgi->gateway.addr ^ addr) & netmask) != 0) //XXX: 为什么是这样比对？
                     {
                         continue;
                     }
@@ -3335,11 +3334,11 @@ get_default_gateway(struct route_gateway_info *rgi)
                     rgi->flags |= RGI_NETMASK_DEFINED;
                 }
 
-                /* save iface name */
+                //保持接口名称
                 strncpynt(rgi->iface, ifreq.ifr_name, sizeof(rgi->iface));
                 rgi->flags |= RGI_IFACE_DEFINED;
 
-                /* now get the hardware address. */
+                //获取硬件地址
                 memset(&ifreq.ifr_hwaddr, 0, sizeof(struct sockaddr));
                 if (ioctl(sd, SIOCGIFHWADDR, &ifreq) < 0)
                 {
@@ -3536,9 +3535,7 @@ done:
     }
 }
 
-#elif defined(TARGET_DARWIN) || defined(TARGET_SOLARIS)    \
-    || defined(TARGET_FREEBSD) || defined(TARGET_DRAGONFLY)    \
-    || defined(TARGET_OPENBSD) || defined(TARGET_NETBSD)
+#elif defined(TARGET_DARWIN) || defined(TARGET_SOLARIS) || defined(TARGET_FREEBSD) || defined(TARGET_DRAGONFLY) || defined(TARGET_OPENBSD) || defined(TARGET_NETBSD)
 
 #include <sys/types.h>
 #include <sys/socket.h>

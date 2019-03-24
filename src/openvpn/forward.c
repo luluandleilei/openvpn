@@ -456,42 +456,45 @@ check_connection_established_dowork(struct context *c)
     }
 }
 
-/*
- * Send a string to remote over the TLS control channel.
- * Used for push/pull messages, passing username/password,
- * etc.
- */
+bool
+send_control_channel_string_dowork(struct tls_multi *multi,
+                                   const char *str, int msglevel)
+{
+    struct gc_arena gc = gc_new();
+    bool stat;
+
+    /* buffered cleartext write onto TLS control channel */
+    stat = tls_send_payload(multi, (uint8_t *) str, strlen(str) + 1);
+
+    msg(msglevel, "SENT CONTROL [%s]: '%s' (status=%d)",
+        tls_common_name(multi, false),
+        sanitize_control_message(str, &gc),
+        (int) stat);
+
+    gc_free(&gc);
+    return stat;
+}
+
 bool
 send_control_channel_string(struct context *c, const char *str, int msglevel)
 {
     if (c->c2.tls_multi)
     {
-        struct gc_arena gc = gc_new();
-        bool stat;
-
-        /* buffered cleartext write onto TLS control channel */
-        stat = tls_send_payload(c->c2.tls_multi, (uint8_t *) str, strlen(str) + 1);
-
+        bool ret = send_control_channel_string_dowork(c->c2.tls_multi,
+                                                      str, msglevel);
         /*
          * Reschedule tls_multi_process.
          * NOTE: in multi-client mode, usually the below two statements are
          * insufficient to reschedule the client instance object unless
          * multi_schedule_context_wakeup(m, mi) is also called.
          */
+
         interval_action(&c->c2.tmp_int);
         context_immediate_reschedule(c); /* ZERO-TIMEOUT */
-
-        msg(msglevel, "SENT CONTROL [%s]: '%s' (status=%d)",
-            tls_common_name(c->c2.tls_multi, false),
-            sanitize_control_message(str, &gc),
-            (int) stat);
-
-        gc_free(&gc);
-        return stat;
+        return ret;
     }
     return true;
 }
-
 /*
  * Add routes.
  */
@@ -743,7 +746,7 @@ static void
 process_coarse_timers(struct context *c)
 {
     /* flush current packet-id to file once per 60
-     * seconds if --replay-persist was specified */
+    * seconds if --replay-persist was specified */
     check_packet_id_persist_flush(c);
 
     /* should we update status file? */
@@ -822,7 +825,7 @@ check_coarse_timers_dowork(struct context *c)
     process_coarse_timers(c);
     c->c2.coarse_timer_wakeup = now + c->c2.timeval.tv_sec;
 
-    dmsg(D_INTERVAL, "TIMER: coarse timer wakeup %"PRIi64" seconds", (int64_t)c->c2.timeval.tv_sec);
+    dmsg(D_INTERVAL, "TIMER: coarse timer wakeup %" PRIi64 " seconds", (int64_t)c->c2.timeval.tv_sec);
 
     /* Is the coarse timeout NOT the earliest one? */
     if (c->c2.timeval.tv_sec > save.tv_sec)
@@ -1394,7 +1397,9 @@ process_incoming_tun(struct context *c)
          * The --passtos and --mssfix options require
          * us to examine the IP header (IPv4 or IPv6).
          */
-        process_ip_header(c, PIPV4_PASSTOS|PIP_MSSFIX|PIPV4_CLIENT_NAT, &c->c2.buf);
+        unsigned int flags = PIPV4_PASSTOS | PIP_MSSFIX | PIPV4_CLIENT_NAT
+                             | PIPV6_IMCP_NOHOST_CLIENT;
+        process_ip_header(c, flags, &c->c2.buf);
 
 #ifdef PACKET_TRUNCATION_CHECK
         /* if (c->c2.buf.len > 1) --c->c2.buf.len; */
@@ -1405,6 +1410,9 @@ process_incoming_tun(struct context *c)
                                 &c->c2.n_trunc_pre_encrypt);
 #endif
 
+    }
+    if (c->c2.buf.len > 0)
+    {
         encrypt_sign(c, true);
     }
     else
@@ -1413,6 +1421,142 @@ process_incoming_tun(struct context *c)
     }
     perf_pop();
     gc_free(&gc);
+}
+
+/**
+ * Forges a IPv6 ICMP packet with a no route to host error code from the
+ * IPv6 packet in buf and sends it directly back to the client via the tun
+ * device when used on a client and via the link if used on the server.
+ *
+ * @param buf       - The buf containing the packet for which the icmp6
+ *                    unreachable should be constructed.
+ *
+ * @param client    - determines whether to the send packet back via tun or link
+ */
+void
+ipv6_send_icmp_unreachable(struct context *c, struct buffer *buf, bool client)
+{
+#define MAX_ICMPV6LEN 1280
+    struct openvpn_icmp6hdr icmp6out;
+    CLEAR(icmp6out);
+
+    /*
+     * Get a buffer to the ip packet, is_ipv6 automatically forwards
+     * the buffer to the ip packet
+     */
+    struct buffer inputipbuf = *buf;
+
+    is_ipv6(TUNNEL_TYPE(c->c1.tuntap), &inputipbuf);
+
+    if (BLEN(&inputipbuf) < (int)sizeof(struct openvpn_ipv6hdr))
+    {
+        return;
+    }
+
+    const struct openvpn_ipv6hdr *pip6 = (struct openvpn_ipv6hdr *)BPTR(&inputipbuf);
+
+    /* Copy version, traffic class, flow label from input packet */
+    struct openvpn_ipv6hdr pip6out = *pip6;
+
+    pip6out.version_prio = pip6->version_prio;
+    pip6out.daddr = pip6->saddr;
+
+    /*
+     * Use the IPv6 remote address if we have one, otherwise use a fake one
+     * using the remote address is preferred since it makes debugging and
+     * understanding where the ICMPv6 error originates easier
+     */
+    if (c->options.ifconfig_ipv6_remote)
+    {
+        inet_pton(AF_INET6, c->options.ifconfig_ipv6_remote, &pip6out.saddr);
+    }
+    else
+    {
+        inet_pton(AF_INET6, "fe80::7", &pip6out.saddr);
+    }
+
+    pip6out.nexthdr = OPENVPN_IPPROTO_ICMPV6;
+
+    /*
+     * The ICMPv6 unreachable code worked best in my (arne) tests with Windows,
+     * Linux and Android. Windows did not like the administratively prohibited
+     * return code (no fast fail)
+     */
+    icmp6out.icmp6_type = OPENVPN_ICMP6_DESTINATION_UNREACHABLE;
+    icmp6out.icmp6_code = OPENVPN_ICMP6_DU_NOROUTE;
+
+    int icmpheader_len = sizeof(struct openvpn_ipv6hdr)
+                         + sizeof(struct openvpn_icmp6hdr);
+    int totalheader_len = icmpheader_len;
+
+    if (TUNNEL_TYPE(c->c1.tuntap) == DEV_TYPE_TAP)
+    {
+        totalheader_len += sizeof(struct openvpn_ethhdr);
+    }
+
+    /*
+     * Calculate size for payload, defined in the standard that the resulting
+     * frame should be <= 1280 and have as much as possible of the original
+     * packet
+     */
+    int max_payload_size = min_int(MAX_ICMPV6LEN,
+                                   TUN_MTU_SIZE(&c->c2.frame) - icmpheader_len);
+    int payload_len = min_int(max_payload_size, BLEN(&inputipbuf));
+
+    pip6out.payload_len = htons(sizeof(struct openvpn_icmp6hdr) + payload_len);
+
+    /* Construct the packet as outgoing packet back to the client */
+    struct buffer *outbuf;
+    if (client)
+    {
+        c->c2.to_tun = c->c2.buffers->aux_buf;
+        outbuf = &(c->c2.to_tun);
+    }
+    else
+    {
+        c->c2.to_link = c->c2.buffers->aux_buf;
+        outbuf = &(c->c2.to_link);
+    }
+    ASSERT(buf_init(outbuf, totalheader_len));
+
+    /* Fill the end of the buffer with original packet */
+    ASSERT(buf_safe(outbuf, payload_len));
+    ASSERT(buf_copy_n(outbuf, &inputipbuf, payload_len));
+
+    /* ICMP Header, copy into buffer to allow checksum calculation */
+    ASSERT(buf_write_prepend(outbuf, &icmp6out, sizeof(struct openvpn_icmp6hdr)));
+
+    /* Calculate checksum over the packet and write to header */
+
+    uint16_t new_csum = ip_checksum(AF_INET6, BPTR(outbuf), BLEN(outbuf),
+                                    (const uint8_t *)&pip6out.saddr,
+                                    (uint8_t *)&pip6out.daddr, OPENVPN_IPPROTO_ICMPV6);
+    ((struct openvpn_icmp6hdr *) BPTR(outbuf))->icmp6_cksum = htons(new_csum);
+
+
+    /* IPv6 Header */
+    ASSERT(buf_write_prepend(outbuf, &pip6out, sizeof(struct openvpn_ipv6hdr)));
+
+    /*
+     * Tap mode, we also need to create an Ethernet header.
+     */
+    if (TUNNEL_TYPE(c->c1.tuntap) == DEV_TYPE_TAP)
+    {
+        if (BLEN(buf) < (int)sizeof(struct openvpn_ethhdr))
+        {
+            return;
+        }
+
+        const struct openvpn_ethhdr *orig_ethhdr = (struct openvpn_ethhdr *) BPTR(buf);
+
+        /* Copy frametype and reverse source/destination for the response */
+        struct openvpn_ethhdr ethhdr;
+        memcpy(ethhdr.source, orig_ethhdr->dest, OPENVPN_ETH_ALEN);
+        memcpy(ethhdr.dest, orig_ethhdr->source, OPENVPN_ETH_ALEN);
+        ethhdr.proto = htons(OPENVPN_ETH_P_IPV6);
+        ASSERT(buf_write_prepend(outbuf, &ethhdr, sizeof(struct openvpn_ethhdr)));
+    }
+#undef MAX_ICMPV6LEN
 }
 
 void
@@ -1435,6 +1579,10 @@ process_ip_header(struct context *c, unsigned int flags, struct buffer *buf)
     if (!c->options.route_gateway_via_dhcp)
     {
         flags &= ~PIPV4_EXTRACT_DHCP_ROUTER;
+    }
+    if (!c->options.block_ipv6)
+    {
+        flags &= ~(PIPV6_IMCP_NOHOST_CLIENT | PIPV6_IMCP_NOHOST_SERVER);
     }
 
     if (buf->len > 0)
@@ -1471,7 +1619,7 @@ process_ip_header(struct context *c, unsigned int flags, struct buffer *buf)
                 /* possibly do NAT on packet */
                 if ((flags & PIPV4_CLIENT_NAT) && c->options.client_nat)
                 {
-                    const int direction = (flags & PIPV4_OUTGOING) ? CN_INCOMING : CN_OUTGOING;
+                    const int direction = (flags & PIP_OUTGOING) ? CN_INCOMING : CN_OUTGOING;
                     client_nat_transform(c->options.client_nat, &ipbuf, direction);
                 }
                 /* possibly extract a DHCP router message */
@@ -1489,8 +1637,18 @@ process_ip_header(struct context *c, unsigned int flags, struct buffer *buf)
                 /* possibly alter the TCP MSS */
                 if (flags & PIP_MSSFIX)
                 {
-                    mss_fixup_ipv6(&ipbuf, MTU_TO_MSS(TUN_MTU_SIZE_DYNAMIC(&c->c2.frame)));
+                    mss_fixup_ipv6(&ipbuf,
+                                   MTU_TO_MSS(TUN_MTU_SIZE_DYNAMIC(&c->c2.frame)));
                 }
+                if (!(flags & PIP_OUTGOING) && (flags
+                                                &(PIPV6_IMCP_NOHOST_CLIENT | PIPV6_IMCP_NOHOST_SERVER)))
+                {
+                    ipv6_send_icmp_unreachable(c, buf,
+                                               (bool)(flags & PIPV6_IMCP_NOHOST_CLIENT));
+                    /* Drop the IPv6 packet */
+                    buf->len = 0;
+                }
+
             }
         }
     }
@@ -1669,7 +1827,9 @@ process_outgoing_tun(struct context *c)
      * The --mssfix option requires
      * us to examine the IP header (IPv4 or IPv6).
      */
-    process_ip_header(c, PIP_MSSFIX|PIPV4_EXTRACT_DHCP_ROUTER|PIPV4_CLIENT_NAT|PIPV4_OUTGOING, &c->c2.to_tun);
+    process_ip_header(c,
+                      PIP_MSSFIX | PIPV4_EXTRACT_DHCP_ROUTER | PIPV4_CLIENT_NAT | PIP_OUTGOING,
+                      &c->c2.to_tun);
 
     if (c->c2.to_tun.len <= MAX_RW_SIZE_TUN(&c->c2.frame))
     {
